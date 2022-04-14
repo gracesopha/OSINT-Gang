@@ -9,7 +9,7 @@ Either Program will retreive the requested information
 
 Requires Python 3
 
-***
+---
 
 ### redditAPI
 
@@ -25,8 +25,8 @@ Requires PRAW and PYYAML:
 Expects [Reddit API details](https://www.reddit.com/wiki/api) in an auth.yaml file in this format:
 
     reddit:
-    id: *App ID*
-    secret: *API SECRET*
+      id: *App ID*
+      secret: *API SECRET*
 
 ---
 
