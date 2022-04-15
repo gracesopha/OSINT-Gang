@@ -17,9 +17,10 @@ Uses the official Reddit API
 API Documentation: [Reddit API Docs](https://www.reddit.com/dev/api/)  
 PRAW Documentation: [PRAW Docs](https://praw.readthedocs.io/en/stable/)
 
-Requires PRAW and PYYAML:
+Requires PRAW, PANDAS, and PYYAML:
 
     pip install praw
+    pip install pandas
     pip install pyyaml
 
 Expects [Reddit API details](https://www.reddit.com/wiki/api) in an auth.yaml file in this format:
@@ -35,7 +36,8 @@ Expects [Reddit API details](https://www.reddit.com/wiki/api) in an auth.yaml fi
 Uses [PushShift](https://pushshift.io/)  
 [API documentation](https://github.com/pushshift/api) - No API Key Required
 
-Requires Requests and Tabulate:
+Requires Pandas, Requests, and Tabulate:
 
+    pip install pandas
     pip install requests
     pip install tabulate
