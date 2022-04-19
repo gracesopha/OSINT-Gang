@@ -6,7 +6,11 @@ import praw
 import pandas as pd
 import nltk
 from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 nltk.download('vader_lexicon')
+nltk.download('stopwords')
+nltk.download('punkt')
 
 REDDIT_CONFIG_FILE = 'auth.yaml'
 
@@ -75,7 +79,14 @@ if (specQuery == "y" or specQuery == "Y" or specQuery == "yes" or specQuery == "
     for i in sub.comments.list():
       #Calculate Sentiment
       sia = SIA()
-      polarityScore= sia.polarity_scores(i.body)
+      stopWords = set(stopwords.words('english'))
+      wordTokenize = word_tokenize(i.body)
+      filteredSentence = [w for w in wordTokenize if not w.lower() in stopWords]
+      filteredSentence = []
+      for w in wordTokenize:
+        if w not in stopWords:
+          filteredSentence.append(w)
+      polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
 
       #Append to Dictionary
       topics_dict["title"].append(c.title)
@@ -124,7 +135,14 @@ else:
     for i in sub.comments.list():
       #Calculate Sentiment
       sia = SIA()
-      polarityScore= sia.polarity_scores(i.body)
+      stopWords = set(stopwords.words('english'))
+      wordTokenize = word_tokenize(i.body)
+      filteredSentence = [w for w in wordTokenize if not w.lower() in stopWords]
+      filteredSentence = []
+      for w in wordTokenize:
+        if w not in stopWords:
+          filteredSentence.append(w)
+      polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
       
       #Append to Dictionary
       topics_dict["title"].append(c.title)
