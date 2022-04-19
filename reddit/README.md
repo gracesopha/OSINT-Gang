@@ -17,11 +17,13 @@ Uses the official Reddit API
 API Documentation: [Reddit API Docs](https://www.reddit.com/dev/api/)  
 PRAW Documentation: [PRAW Docs](https://praw.readthedocs.io/en/stable/)
 
-Requires PRAW, PANDAS, and PYYAML:
+Requires NLTK, PRAW, PANDAS, and PYYAML:
 
+    pip install nltk
     pip install praw
     pip install pandas
     pip install pyyaml
+
 
 Expects [Reddit API details](https://www.reddit.com/wiki/api) in an auth.yaml file in this format:
 
