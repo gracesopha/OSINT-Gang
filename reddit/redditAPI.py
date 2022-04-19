@@ -42,14 +42,14 @@ topics_dict = { "title":[], \
 
 #Set variables 
 searchTerm = (input("Search Term to query:"))
-resultSize = 500
+resultSize = 5000
 allSubs = reddit_read_only.subreddit("all")
 specQuery = (input("Customize the Query? Yes/No: "))
 
 #If loop for customized queries
 if (specQuery == "y" or specQuery == "Y" or specQuery == "yes" or specQuery == "Yes"):
   subName = reddit_read_only.subreddit((input("Name of the specific Subreddit: ")))
-  resultSize = (eval(input("Number of results (Default: 500): ")))
+  resultSize = (eval(input("Number of results (Default: 5000): ")))
   
   #For loop to iterate through search results based on user input
   for c in subName.search(searchTerm, limit=resultSize):
@@ -108,7 +108,7 @@ if (specQuery == "y" or specQuery == "Y" or specQuery == "yes" or specQuery == "
 else:
   
   #For loop to iterate through search results based on default of 500 results and all subreddits
-  for c in allSubs.search(searchTerm, limit=500):
+  for c in allSubs.search(searchTerm, limit=5000):
 
     #Append results to the dictionary
     topics_dict["title"].append(c.title)
