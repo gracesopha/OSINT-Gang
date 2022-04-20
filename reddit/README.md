@@ -24,7 +24,6 @@ Requires NLTK, PRAW, PANDAS, and PYYAML:
     pip install pandas
     pip install pyyaml
 
-
 Expects [Reddit API details](https://www.reddit.com/wiki/api) in an auth.yaml file in this format:
 
     reddit:
