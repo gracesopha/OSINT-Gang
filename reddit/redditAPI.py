@@ -156,6 +156,11 @@ else:
       topics_dict["subreddit_name_prefixed"].append(i.subreddit_name_prefixed)
       topics_dict["permalink"].append(i.permalink)
       topics_dict["body"].append(i.body)
+      topics_dict["sentimentPos"].append(polarityScore['pos'])
+      topics_dict["sentimentNeg"].append(polarityScore['neg'])
+      topics_dict["sentimentNeu"].append(polarityScore['neu'])
+      topics_dict["sentimentComp"].append(polarityScore['compound'])
+
 
 #Writes the dictionary to a DataFrame
 df = pd.DataFrame(topics_dict)
