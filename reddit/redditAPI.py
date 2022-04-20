@@ -45,7 +45,8 @@ searchTerm = (input("Search Term to query:"))
 resultSize = 5000
 allSubs = reddit_read_only.subreddit("all")
 specQuery = (input("Customize the Query? Yes/No: "))
-
+subCount = 1
+commentCount = 1
 #If loop for customized queries
 if (specQuery == "y" or specQuery == "Y" or specQuery == "yes" or specQuery == "Yes"):
   subName = reddit_read_only.subreddit((input("Name of the specific Subreddit: ")))
@@ -70,7 +71,11 @@ if (specQuery == "y" or specQuery == "Y" or specQuery == "yes" or specQuery == "
     topics_dict["sentimentNeg"].append("")
     topics_dict["sentimentNeu"].append("")
     topics_dict["sentimentComp"].append("")
-
+    
+    #Uncomment the following two lines to watch the progress (for debugging - can be removed)
+    #print("Submission # ", subCount, " completed")
+    #subCount=subCount+1
+    
     #Creates a "sub" object for the current comment to scrape all replies
     sub = reddit_read_only.submission(id=c.id)
     sub.comments.replace_more(limit=None)
@@ -104,6 +109,11 @@ if (specQuery == "y" or specQuery == "Y" or specQuery == "yes" or specQuery == "
       topics_dict["sentimentNeg"].append(polarityScore['neg'])
       topics_dict["sentimentNeu"].append(polarityScore['neu'])
       topics_dict["sentimentComp"].append(polarityScore['compound'])
+      
+      #Uncomment the following two lines to watch the progress (for debugging - can be removed)
+      #print("Comment # ", commentCount, " completed")
+      #commentCount=commentCount+1
+     
 
 else:
   
@@ -126,6 +136,10 @@ else:
     topics_dict["sentimentNeg"].append("")
     topics_dict["sentimentNeu"].append("")
     topics_dict["sentimentComp"].append("")
+
+    #Uncomment the following two lines to watch the progress (for debugging - can be removed)
+    #print("Submission # ", subCount, " completed")
+    #subCount=subCount+1
 
     #Creates a "sub" object for the current comment to scrape all replies
     sub = reddit_read_only.submission(id=c.id)
@@ -160,6 +174,10 @@ else:
       topics_dict["sentimentNeg"].append(polarityScore['neg'])
       topics_dict["sentimentNeu"].append(polarityScore['neu'])
       topics_dict["sentimentComp"].append(polarityScore['compound'])
+      
+      #Uncomment the following two lines to watch the progress (for debugging - can be removed)
+      #print("Comment # ", commentCount, " completed")
+      #commentCount=commentCount+1
 
 
 #Writes the dictionary to a DataFrame
