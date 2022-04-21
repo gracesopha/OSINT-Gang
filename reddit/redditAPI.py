@@ -5,6 +5,7 @@ import yaml
 import praw
 import pandas as pd
 import nltk
+import datetime
 from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -55,6 +56,9 @@ if (specQuery == "y" or specQuery == "Y" or specQuery == "yes" or specQuery == "
   #For loop to iterate through search results based on user input
   for c in subName.search(searchTerm, limit=resultSize):
     
+    #Convert Submission Time to DateTime
+    submissionTimeStamp=datetime.datetime.utcfromtimestamp(c.created).strftime('%Y-%m-%d %H:%M:%S')
+
     #Append results to the dictionary
     topics_dict["title"].append(c.title)
     topics_dict["author"].append(c.author)
@@ -63,7 +67,7 @@ if (specQuery == "y" or specQuery == "Y" or specQuery == "yes" or specQuery == "
     topics_dict["id"].append(c.id)
     topics_dict["url"].append(c.url)
     topics_dict["NumOfComments"].append(c.num_comments)
-    topics_dict["created"].append(c.created)
+    topics_dict["created"].append(submissionTimeStamp)
     topics_dict["subreddit_name_prefixed"].append(c.subreddit_name_prefixed)
     topics_dict["permalink"].append(c.permalink)
     topics_dict["body"].append(c.selftext)
@@ -92,7 +96,10 @@ if (specQuery == "y" or specQuery == "Y" or specQuery == "yes" or specQuery == "
         if w not in stopWords:
           filteredSentence.append(w)
       polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
-
+    
+      #Convert Comment Time to DateTime
+      commentTimeStamp=datetime.datetime.utcfromtimestamp(i.created).strftime('%Y-%m-%d %H:%M:%S')
+    
       #Append to Dictionary
       topics_dict["title"].append(c.title)
       topics_dict["author"].append(i.author)
@@ -101,7 +108,7 @@ if (specQuery == "y" or specQuery == "Y" or specQuery == "yes" or specQuery == "
       topics_dict["id"].append(i.id)
       topics_dict["url"].append(c.url)
       topics_dict["NumOfComments"].append(c.num_comments)
-      topics_dict["created"].append(i.created)
+      topics_dict["created"].append(commentTimeStamp)
       topics_dict["subreddit_name_prefixed"].append(i.subreddit_name_prefixed)
       topics_dict["permalink"].append(i.permalink)
       topics_dict["body"].append(i.body)
@@ -119,6 +126,9 @@ else:
   
   #For loop to iterate through search results based on default of 500 results and all subreddits
   for c in allSubs.search(searchTerm, limit=5000):
+     
+    #Convert Submission Time to DateTime
+    submissionTimeStamp=datetime.datetime.utcfromtimestamp(c.created).strftime('%Y-%m-%d %H:%M:%S')
 
     #Append results to the dictionary
     topics_dict["title"].append(c.title)
@@ -128,7 +138,7 @@ else:
     topics_dict["id"].append(c.id)
     topics_dict["url"].append(c.url)
     topics_dict["NumOfComments"].append(c.num_comments)
-    topics_dict["created"].append(c.created)
+    topics_dict["created"].append(submissionTimeStamp)
     topics_dict["subreddit_name_prefixed"].append(c.subreddit_name_prefixed)
     topics_dict["permalink"].append(c.permalink)
     topics_dict["body"].append(c.selftext)
@@ -157,7 +167,10 @@ else:
         if w not in stopWords:
           filteredSentence.append(w)
       polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
-      
+          
+      #Convert Comment Time to DateTime
+      commentTimeStamp=datetime.datetime.utcfromtimestamp(i.created).strftime('%Y-%m-%d %H:%M:%S')
+    
       #Append to Dictionary
       topics_dict["title"].append(c.title)
       topics_dict["author"].append(i.author)
@@ -166,7 +179,7 @@ else:
       topics_dict["id"].append(i.id)
       topics_dict["url"].append(c.url)
       topics_dict["NumOfComments"].append(c.num_comments)
-      topics_dict["created"].append(i.created)
+      topics_dict["created"].append(commentTimeStamp)
       topics_dict["subreddit_name_prefixed"].append(i.subreddit_name_prefixed)
       topics_dict["permalink"].append(i.permalink)
       topics_dict["body"].append(i.body)
