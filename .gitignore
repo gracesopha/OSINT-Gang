@@ -5,3 +5,6 @@ auth.yaml
 reddit.csv
 reddit/BanditReport.html
 reddit/bandit-config
+CredFile - Plaintext.txt
+reddit/redditAPI2.py
+.gitignore
