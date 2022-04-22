@@ -14,8 +14,15 @@ import dateutil.parser
 import unicodedata
 #To add wait time between requests
 import time
+
 tokenvalue = input("Enter your Bearer token: ")
 os.environ['TOKEN'] = tokenvalue
+
+inputkeyword = input("Enter the keyword you would like to search for: ")
+
+#Set language of tweets to be searched for. Default: English
+keyword_lang = " lang:en"
+inputkeyword = inputkeyword + keyword_lang
 
 def auth():
     return os.getenv('TOKEN')
@@ -117,7 +124,7 @@ def append_to_csv(json_response, fileName):
 #Inputs for tweets
 bearer_token = auth()
 headers = create_headers(bearer_token)
-keyword = "putin lang:en"
+keyword = inputkeyword
 start_list =    ['2022-04-18T00:00:00.000Z']
 
 end_list =      ['2022-04-21T00:00:00.000Z']
