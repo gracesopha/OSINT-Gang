@@ -6,6 +6,7 @@ import praw
 import pandas as pd
 import nltk
 import datetime
+import ast
 from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -51,7 +52,7 @@ commentCount = 1
 #If loop for customized queries
 if (specQuery == "y" or specQuery == "Y" or specQuery == "yes" or specQuery == "Yes"):
   subName = reddit_read_only.subreddit((input("Name of the specific Subreddit: ")))
-  resultSize = (eval(input("Number of results (Default: 5000): ")))
+  resultSize = (ast.literal_eval(input("Number of results (Default: 5000): ")))
   
   #For loop to iterate through search results based on user input
   for c in subName.search(searchTerm, limit=resultSize):

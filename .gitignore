@@ -1,3 +1,7 @@
 reddit/reddit.csv
 reddit/auth.yaml
 auth.yaml
+.vscode/settings.json
+reddit.csv
+reddit/BanditReport.html
+reddit/bandit-config
