@@ -20,6 +20,10 @@ os.environ['TOKEN'] = tokenvalue
 
 inputkeyword = input("Enter the keyword you would like to search for: ")
 
+#Set language of tweets to be searched for. Default: English
+keyword_lang = " lang:en"
+inputkeyword = inputkeyword + keyword_lang
+
 def auth():
     return os.getenv('TOKEN')
 
