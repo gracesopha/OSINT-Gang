@@ -2,7 +2,9 @@
 #Reddit API credentials stored in a local auth.yaml file.
 #Results are returned to a CSV file
 from itertools import count
+from msilib.schema import TextStyle
 from re import subn
+from turtle import textinput
 from typing_extensions import IntVar
 from unittest import result
 import yaml
@@ -61,11 +63,13 @@ root.resizable(False, False)
 root.title('OSINT Application')
 
 # store email address and password
-email = tk.StringVar()
+user = tk.StringVar()
 password = tk.StringVar()
 searchInput = tk.StringVar()
 customResultSize = tk.IntVar()
 customSubs = tk.StringVar()
+newUsername = tk.StringVar()
+newPassword = tk.StringVar()
 allSubs = reddit_read_only.subreddit("all")
 resultSize = 5000
 subCount = 1
@@ -77,10 +81,10 @@ def loginClicked():
     pwDF=pd.read_csv(cred_filename,header=None)
     userDict=dict(zip(pwDF[0].values,pwDF[1].values))
   
-    if (email.get() in userDict):
+    if (user.get() in userDict):
       pwHash = hashlib.sha512( str(password.get()).encode("utf-8") ).hexdigest()
-      if pwHash == userDict[email.get()]:
-        msg = f'Hello: {email.get()} Welcome to the OSINT App.'
+      if pwHash == userDict[user.get()]:
+        msg = f'Hello: {user.get()} Welcome to the OSINT App.'
         showinfo(
             title='Information',
             message=msg
@@ -106,7 +110,23 @@ def loginClicked():
         message=msg
       )
 
+def addNewUser():
+  mainApp.pack_forget()
+  newUser.pack(padx=160, pady=30, fill='x', expand=True)
 
+def writeNewUser():
+  uName = newUsername.get()
+  pWordHashed = hashlib.sha512( str(newPassword.get()).encode("utf-8") ).hexdigest()
+  f = open("CredFile.txt", "a", encoding='utf-8')
+  f.write(uName+','+pWordHashed+ "\n")
+  f.close
+  msg = f'New User {newUsername.get()} has been added'
+  showinfo(
+    title='Information',
+    message=msg
+  )
+  newUser.pack_forget()
+  mainApp.pack()
 def redditButtonCMD():
   mainApp.pack_forget()
   redditCustomConfig.pack_forget()
@@ -213,7 +233,6 @@ def redditCustomCfg():
     redditApp.pack_forget()
     redditCustomConfig.pack(padx=160, pady=30, fill='x', expand=True)
     
-  
 def redditCustomCMD():
   searchTerm = searchInput.get()
   subName = reddit_read_only.subreddit(customSubs.get())
@@ -304,12 +323,12 @@ signin.pack(padx=160, pady=30, fill='x', expand=True)
 
 
 # email
-email_label = ttk.Label(signin, text="Username:")
-email_label.pack(fill='x', expand=True)
+user_label = ttk.Label(signin, text="Username:")
+user_label.pack(fill='x', expand=True)
 
-email_entry = ttk.Entry(signin, textvariable=email)
-email_entry.pack(fill='x', expand=True)
-email_entry.focus()
+user_entry = ttk.Entry(signin, textvariable=user)
+user_entry.pack(fill='x', expand=True)
+user_entry.focus()
 
 # password
 password_label = ttk.Label(signin, text="Password:")
@@ -328,9 +347,29 @@ mainLabel = ttk.Label(mainApp, text="Please Choose your tools:")
 mainLabel.pack(fill='x', expand=True, pady=10)
 redditButton = ttk.Button(mainApp, text="Reddit",command=redditButtonCMD)
 redditButton.pack(fill='x', expand=True, pady=10)
-redditCustomConfig = ttk.Frame(root)
-redditApp = ttk.Frame(root)
+newUserButton = ttk.Button(mainApp, text="Add New User", command=addNewUser)
+newUserButton.pack(fill='x', expand=True, pady=10)
+
+
 redditDefaultApp = ttk.Frame(root)
+
+#New User Frame
+newUser = ttk.Frame(root)
+newUserLabel1 = ttk.Label(newUser, text="Enter the new username:")
+newUserLabel1.pack(fill='x', expand=True, pady=10)
+newUserEntry1 = ttk.Entry(newUser, textvariable=newUsername)
+newUserEntry1.pack(fill='x', expand=True, pady=10)
+newUserLabel2 = ttk.Label(newUser, text="Enter the new password:")
+newUserLabel2.pack(fill='x', expand=True, pady=10)
+newUserEntry2 = ttk.Entry(newUser, textvariable=newPassword, show="*")
+newUserEntry2.pack(fill='x', expand=True, pady=10)
+newUserAddButton = ttk.Button(newUser, text="Add 'em",command=writeNewUser)
+newUserAddButton.pack(fill='x', expand=True, pady=10)
+redditButton = ttk.Button(newUser, text="Back",command=redditButtonCMD)
+redditButton.pack(fill='x', expand=True, pady=10)
+
+#Reddit Custom Frame
+redditCustomConfig = ttk.Frame(root)
 redditCustomLabel1 = ttk.Label(redditCustomConfig, text="Please Enter the subreddit to search")
 redditCustomLabel1.pack(fill='x', expand=True, pady=10)
 redditCustomEntry1 = ttk.Entry(redditCustomConfig, textvariable=customSubs)
@@ -343,6 +382,9 @@ redditCustomGo = ttk.Button(redditCustomConfig, text="Let's Do It", command=redd
 redditCustomGo.pack(fill='x', expand=True, pady=10)
 redditButton = ttk.Button(redditCustomConfig, text="Back",command=redditButtonCMD)
 redditButton.pack(fill='x', expand=True, pady=10)
+
+#Reddit Landing Frame
+redditApp = ttk.Frame(root)
 redditLabel1 = ttk.Label(redditApp, text="Please enter a search term, then select default or custom parameters.")
 redditLabel1.pack(fill='x', expand=True, pady=10)
 redditSearchEntry = ttk.Entry(redditApp, textvariable=searchInput)
