@@ -12,7 +12,7 @@ The bearer token will be requested once the script is initiated within the CLI.
 
 ## Output
 
-It will output the data into a CSV file. 
+This script will output 100 tweets that were found using the given keyword. It will also filter the tweets to be of the set language (By default English). These tweets will be collected into a csv file.
 
 ## Credits
 
