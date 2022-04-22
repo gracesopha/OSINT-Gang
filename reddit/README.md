@@ -31,6 +31,31 @@ Expects [Reddit API details](https://www.reddit.com/wiki/api) in an auth.yaml fi
       secret: *API SECRET*
 
 ---
+### redditAPIGUI
+
+Uses the official Reddit API
+API Documentation: [Reddit API Docs](https://www.reddit.com/dev/api/)  
+PRAW Documentation: [PRAW Docs](https://praw.readthedocs.io/en/stable/)
+
+Requires CRYPTOGRAPHY, NLTK, PRAW, PANDAS, and PYYAML:
+
+    pip install nltk
+    pip install praw
+    pip install pandas
+    pip install pyyaml
+    pip install cryptography
+
+Expects [Reddit API details](https://www.reddit.com/wiki/api) in an auth.yaml file in this format:
+
+    reddit:
+      id: *App ID*
+      secret: *API SECRET*
+
+Expects username and password database to be in a CredFile.txt file in this format (one pair per line):
+
+    username,*SHA512 Password Hash*
+---
+
 
 ### PushShift
 
