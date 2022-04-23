@@ -10,3 +10,5 @@ reddit/redditAPI2.py
 .gitignore
 reddit/redditAPIGUI.py
 Prospector.txt
+reddit/redditAPIGUI.py
+reddit_app.log

@@ -8,12 +8,17 @@ import nltk
 import datetime
 import tkinter as tk
 import hashlib
+import logging
 from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from tkinter import ttk
 from tkinter.messagebox import showinfo
 from tkinter.messagebox import showerror
+
+#Sets up logging
+logging.basicConfig(filename='reddit_app.log', encoding='utf-8', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
+
 
 #Downloads the required dictionaries for text analysis
 nltk.download('vader_lexicon')
@@ -79,13 +84,14 @@ def loginClicked():
   
     #Loop to check if the user is in the file and if they have the correct password
     if (user.get() in userDict):
-      
+     
       #Hashes the input password
       pwHash = hashlib.sha512( str(password.get()).encode("utf-8") ).hexdigest()
       
       #Compares the hashed input against the user's password from the database
       if pwHash == userDict[user.get()]:
-      
+        #Log successful login
+        logging.info('user - %s has successfully logged in', user.get()) 
         #Welcome and disclaimer messages
         msg = f'Hello: {user.get()} Welcome to the OSINT App.'
         showinfo(
@@ -104,6 +110,7 @@ def loginClicked():
       
       #Error on invalid password
       else: 
+        logging.warning('user - %s submitted an invalid password attempt', user.get()) 
         msg = f'Invalid Username or Password'
         showinfo(
             title='Information',
@@ -112,6 +119,7 @@ def loginClicked():
     
     #Error on invalid user    
     else:
+      logging.warning('user - %s submitted an invalid username', user.get()) 
       msg = f'Invalid Username or Password'
       showinfo(
         title='Information',
@@ -120,6 +128,7 @@ def loginClicked():
 
 #Clears the main app window and creates the add new user window
 def addNewUser():
+  logging.info('user - %s has run the new user tool', user.get())
   mainApp.pack_forget()
   newUser.pack(padx=160, pady=30, fill='x', expand=True)
 
@@ -142,6 +151,8 @@ def writeNewUser():
         )
     else:    
       uName = newUsername.get()
+      logging.warning('user - %s created a new user %s', user.get(), newUsername.get()) 
+
       #Hashes the input password and stores it in the database
       pWordHashed = hashlib.sha512( str(newPassword.get()).encode("utf-8") ).hexdigest()
       #Writes new user to file
@@ -158,6 +169,7 @@ def writeNewUser():
       mainApp.pack()
 #Clears the main app screen or custom config screen, packs the reddit main screen      
 def redditButtonCMD():
+  logging.info('user - %s has run the reddit tool', user.get())
   mainApp.pack_forget()
   redditCustomConfig.pack_forget()
   newUser.pack_forget()
@@ -172,7 +184,9 @@ def redditDefaultCMD():
             title='Error',
             message=msg3
         )
+        logging.warning('user - %s  has attempted a blank default query', user.get())
   else:
+    logging.info('user - %s ran a default reddit search for: %s', user.get(), searchTerm) 
     #Clears the Reddit main app
     redditApp.pack_forget()
     #Packs the Reddit Default screen
@@ -188,6 +202,7 @@ def redditDefaultCMD():
       title='Information',
       message=msg
     )
+    logging.info('Starting default reddit search for %s', searchTerm) 
     #Searches all subreddits for the search term, iterates through 5000 of them
     for c in allSubs.search(searchTerm, limit=5000):
       
@@ -255,6 +270,7 @@ def redditDefaultCMD():
     f = open("reddit.csv", "a", encoding='utf-8')
     f.write(df.to_csv())
     f.close
+    logging.info('Ending default query for: %s', searchTerm) 
     #Clears the Reddit default query, repacks the main Reddit app
     redditDefaultApp.pack_forget()
     redditApp.pack()
@@ -268,6 +284,7 @@ def redditCustomCfg():
         title='Error',
         message=msg3
       )
+      logging.warning('user - %s  has attempted a blank custom query', user.get())   
   else:
     #Clears the main Reddit app, packs the custom configuration page
     redditApp.pack_forget()
@@ -275,88 +292,100 @@ def redditCustomCfg():
     
 #Runs the scrape with the options from the custom configuration    
 def redditCustomCMD():
-  #Converts variables to useable forms
-  searchTerm = searchInput.get()
-  subName = reddit_read_only.subreddit(customSubs.get())
-  strResultSize = customResultSize.get()
-  resultSize=int(strResultSize)
-  #Warns the user
-  msg = f'This will take a while. You will receive a CSV with results when it is done.'
-  showinfo(
-    title='Information',
-    message=msg
-  )
-  #For loop to iterate through search results based on user input
-  for c in subName.search(searchTerm, limit=resultSize):
-    #Convert Submission Time to DateTime
-    submissionTimeStamp=datetime.datetime.utcfromtimestamp(c.created).strftime('%Y-%m-%d %H:%M:%S')
+  if len(customSubs.get()) == 0:
+    msg3 = 'Subreddit can\'t be empty'
+    showerror(
+      title='Error',
+      message=msg3
+    )
+    logging.warning('user - %s  has attempted a blank custom query', user.get()) 
+  else:
+    #Converts variables to useable forms
+    searchTerm = searchInput.get()
+    subName = reddit_read_only.subreddit(customSubs.get())
+    strResultSize = customResultSize.get()
+    resultSize=int(strResultSize)
+    #Warns the user
+    msg = f'This will take a while. You will receive a CSV with results when it is done.'
+    showinfo(
+      title='Information',
+      message=msg
+    )
+    logging.info('user - %s has run a custom query for %s on %s subreddit, requesting %s results', user.get(), searchTerm, subName, resultSize) 
+    #For loop to iterate through search results based on user input
+    logging.info('Custom search query has started for %s on %s subreddit, requesting %s results', searchTerm, subName, resultSize) 
+    for c in subName.search(searchTerm, limit=resultSize):
+      #Convert Submission Time to DateTime
+      submissionTimeStamp=datetime.datetime.utcfromtimestamp(c.created).strftime('%Y-%m-%d %H:%M:%S')
 
-    #Append results to the dictionary
-    topics_dict["title"].append(c.title)
-    topics_dict["author"].append(c.author)
-    topics_dict["author_fullname"].append(c.author_fullname)
-    topics_dict["score"].append(c.score)
-    topics_dict["id"].append(c.id)
-    topics_dict["url"].append(c.url)
-    topics_dict["NumOfComments"].append(c.num_comments)
-    topics_dict["created"].append(submissionTimeStamp)
-    topics_dict["subreddit_name_prefixed"].append(c.subreddit_name_prefixed)
-    topics_dict["permalink"].append(c.permalink)
-    topics_dict["body"].append(c.selftext)
-    topics_dict["sentimentPos"].append("")
-    topics_dict["sentimentNeg"].append("")
-    topics_dict["sentimentNeu"].append("")
-    topics_dict["sentimentComp"].append("")
-    
-    #Creates a "sub" object for the current comment to scrape all replies
-    sub = reddit_read_only.submission(id=c.id)
-    sub.comments.replace_more(limit=None)
-    
-    #For loop to iterate through replies to the previous comment
-    for i in sub.comments.list():
-      print(i.id)
-      #Calculate Sentiment
-      sia = SIA()
-      stopWords = set(stopwords.words('english'))
-      wordTokenize = word_tokenize(i.body)
-      filteredSentence = [w for w in wordTokenize if not w.lower() in stopWords]
-      filteredSentence = []
-      for w in wordTokenize:
-        if w not in stopWords:
-          filteredSentence.append(w)
-      polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
-    
-      #Convert Comment Time to DateTime
-      commentTimeStamp=datetime.datetime.utcfromtimestamp(i.created).strftime('%Y-%m-%d %H:%M:%S')
-    
-      #Append to Dictionary
+      #Append results to the dictionary
       topics_dict["title"].append(c.title)
-      topics_dict["author"].append(i.author)
-      topics_dict["author_fullname"].append("")
-      topics_dict["score"].append(i.score)
-      topics_dict["id"].append(i.id)
+      topics_dict["author"].append(c.author)
+      topics_dict["author_fullname"].append(c.author_fullname)
+      topics_dict["score"].append(c.score)
+      topics_dict["id"].append(c.id)
       topics_dict["url"].append(c.url)
       topics_dict["NumOfComments"].append(c.num_comments)
-      topics_dict["created"].append(commentTimeStamp)
-      topics_dict["subreddit_name_prefixed"].append(i.subreddit_name_prefixed)
-      topics_dict["permalink"].append(i.permalink)
-      topics_dict["body"].append(i.body)
-      topics_dict["sentimentPos"].append(polarityScore['pos'])
-      topics_dict["sentimentNeg"].append(polarityScore['neg'])
-      topics_dict["sentimentNeu"].append(polarityScore['neu'])
-      topics_dict["sentimentComp"].append(polarityScore['compound'])
-  #Creates a dataframe and pulls in the dictionary for processing
-  df = pd.DataFrame(topics_dict)
-  #Opens the output file, appends the data, closes the file
-  f = open("reddit.csv", "a", encoding='utf-8')
-  f.write(df.to_csv())
-  f.close
-  #clears the custom config and repacks the main Reddit app
-  redditCustomConfig.pack_forget()
-  redditApp.pack()
+      topics_dict["created"].append(submissionTimeStamp)
+      topics_dict["subreddit_name_prefixed"].append(c.subreddit_name_prefixed)
+      topics_dict["permalink"].append(c.permalink)
+      topics_dict["body"].append(c.selftext)
+      topics_dict["sentimentPos"].append("")
+      topics_dict["sentimentNeg"].append("")
+      topics_dict["sentimentNeu"].append("")
+      topics_dict["sentimentComp"].append("")
+      
+      #Creates a "sub" object for the current comment to scrape all replies
+      sub = reddit_read_only.submission(id=c.id)
+      sub.comments.replace_more(limit=None)
+      
+      #For loop to iterate through replies to the previous comment
+      for i in sub.comments.list():
+        print(i.id)
+        #Calculate Sentiment
+        sia = SIA()
+        stopWords = set(stopwords.words('english'))
+        wordTokenize = word_tokenize(i.body)
+        filteredSentence = [w for w in wordTokenize if not w.lower() in stopWords]
+        filteredSentence = []
+        for w in wordTokenize:
+          if w not in stopWords:
+            filteredSentence.append(w)
+        polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
+      
+        #Convert Comment Time to DateTime
+        commentTimeStamp=datetime.datetime.utcfromtimestamp(i.created).strftime('%Y-%m-%d %H:%M:%S')
+      
+        #Append to Dictionary
+        topics_dict["title"].append(c.title)
+        topics_dict["author"].append(i.author)
+        topics_dict["author_fullname"].append("")
+        topics_dict["score"].append(i.score)
+        topics_dict["id"].append(i.id)
+        topics_dict["url"].append(c.url)
+        topics_dict["NumOfComments"].append(c.num_comments)
+        topics_dict["created"].append(commentTimeStamp)
+        topics_dict["subreddit_name_prefixed"].append(i.subreddit_name_prefixed)
+        topics_dict["permalink"].append(i.permalink)
+        topics_dict["body"].append(i.body)
+        topics_dict["sentimentPos"].append(polarityScore['pos'])
+        topics_dict["sentimentNeg"].append(polarityScore['neg'])
+        topics_dict["sentimentNeu"].append(polarityScore['neu'])
+        topics_dict["sentimentComp"].append(polarityScore['compound'])
+    #Creates a dataframe and pulls in the dictionary for processing
+    df = pd.DataFrame(topics_dict)
+    #Opens the output file, appends the data, closes the file
+    f = open("reddit.csv", "a", encoding='utf-8')
+    f.write(df.to_csv())
+    f.close
+    logging.info('Custom search query has ended for %s on %s subreddit, requesting %s results', searchTerm, subName, resultSize) 
+    #clears the custom config and repacks the main Reddit app
+    redditCustomConfig.pack_forget()
+    redditApp.pack()
 
 #Clears the main Reddit app and packs the main app
 def mainAppCMD():
+  logging.info('user - %s has returned to the tool selection', user.get())
   redditApp.pack_forget()
   mainApp.pack(padx=160, pady=30, fill='x', expand=True)      
 
