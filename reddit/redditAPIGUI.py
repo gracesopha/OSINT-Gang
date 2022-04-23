@@ -1,26 +1,17 @@
 #This program allows for scraping details from the Reddit API directly using 
 #Reddit API credentials stored in a local auth.yaml file.
 #Results are returned to a CSV file
-from itertools import count
-from msilib.schema import TextStyle
-from re import subn
-from turtle import textinput
-from typing_extensions import IntVar
-from unittest import result
 import yaml
 import praw
 import pandas as pd
 import nltk
 import datetime
-import ast
 import tkinter as tk
 import hashlib
-from cryptography.fernet import Fernet
-import os
 from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-from tkinter import LEFT, Entry, StringVar, ttk
+from tkinter import ttk
 from tkinter.messagebox import showinfo
 from tkinter.messagebox import showerror
 

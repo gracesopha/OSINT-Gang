@@ -8,3 +8,5 @@ reddit/bandit-config
 CredFile - Plaintext.txt
 reddit/redditAPI2.py
 .gitignore
+reddit/redditAPIGUI.py
+Prospector.txt
