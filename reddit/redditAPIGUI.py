@@ -32,8 +32,9 @@ with open(REDDIT_CONFIG_FILE, 'r') as config_file:
   config = yaml.safe_load(config_file)
   redditId = config['reddit']['id']
   redditSecret = config['reddit']['secret']
+  twitterKey = config['twitter']['key']
   usrername = config
-
+  print(twitterKey)
 #Sets up the Reddit API connection
 reddit_read_only = praw.Reddit(client_id=redditId,      
                                client_secret=redditSecret,      
