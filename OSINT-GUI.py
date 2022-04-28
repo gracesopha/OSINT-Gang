@@ -7,9 +7,11 @@ import requests
 import yaml
 # For dealing with json responses we receive from the API
 import json
+#For connecting to reddit's API
 import praw
 # For displaying the data after
 import pandas as pd
+#For processing comments/tweets and extracting the sentiment
 import nltk
 import datetime
 import dateutil.parser
@@ -74,8 +76,6 @@ def connect_to_endpoint(url, headers, params, next_token = None):
 
 #Set language of tweets to be searched for. Default: English
 keyword_lang = " lang:en"
-
-
 
 #Create dictionary to hold values
 topics_dict = { "title":[], \
@@ -194,9 +194,9 @@ def writeNewUser():
       #Hashes the input password and stores it in the database
       pWordHashed = hashlib.sha512( str(newPassword.get()).encode("utf-8") ).hexdigest()
       #Writes new user to file
-      f = open("CredFile.txt", "a", encoding='utf-8')
-      f.write(uName+','+pWordHashed+ "\n")
-      f.close
+      with open("CredFile.txt", "a", encoding='utf-8') as cf:
+        cf.write(uName+','+pWordHashed+ "\n")
+      #cf.close
       #Pop up to let people know it worked
       msg = f'New User {newUsername.get()} has been added'
       showinfo(
@@ -241,7 +241,7 @@ def redditDefaultCMD():
     redditDefaultLabel2.pack()
     searchTerm = searchInput.get()
     #Pops up warning
-    msg = f'This will take a while. You will receive a CSV with results when it is done.'
+    msg = f'This will take a while.\nYou will receive a CSV with results when it is done.'
     showinfo(
       title='Information',
       message=msg
@@ -311,9 +311,8 @@ def redditDefaultCMD():
     #Pulls the dictionary into a dataframe for processing
     df = pd.DataFrame(topics_dict)
     #Opens the output file, appends the dataframe contents
-    f = open("reddit.csv", "a", encoding='utf-8')
-    f.write(df.to_csv())
-    f.close
+    with open("reddit.csv", "a", encoding='utf-8') as f:
+      f.write(df.to_csv())
     logging.info('Ending default query for: %s', searchTerm) 
     #Clears the Reddit default query, repacks the main Reddit app
     redditDefaultApp.pack_forget()
@@ -354,12 +353,11 @@ def twitterCMD():
     total_tweets = 0
 
     # Create file
-    csvFile = open("twitter.csv", "a", newline="", encoding='utf-8')
-    csvWriter = csv.writer(csvFile)
+    with open("twitter.csv", "a", newline="", encoding='utf-8') as csvFile:
+      csvWriter = csv.writer(csvFile)
+      #Create headers for the data you want to save, in this example, we only want save these columns in our dataset
+      csvWriter.writerow(['author id', 'created_at', 'geo', 'id','lang', 'like_count', 'quote_count', 'reply_count','retweet_count','source','tweet','Positive_Score','Negative_Score','Neutral_Score','Compound_Score'])
 
-    #Create headers for the data you want to save, in this example, we only want save these columns in our dataset
-    csvWriter.writerow(['author id', 'created_at', 'geo', 'id','lang', 'like_count', 'quote_count', 'reply_count','retweet_count','source','tweet','Positive_Score','Negative_Score','Neutral_Score','Compound_Score'])
-    csvFile.close()
     msg = f'Scraping {resultSize} tweets\nThis might take a while, please be patient.'
     showinfo(
       title='Information',
@@ -396,15 +394,11 @@ def twitterCMD():
                     append_to_csv(json_response, "twitter.csv")
                     count += result_count
                     total_tweets += result_count
-                   # msg = f'# of Tweets added this pass:  {count} \n Total # of tweets added: {total_tweets}'
-                   # showinfo(
-                   #   title='Information',
-                   #   message=msg
-                   #)
+                   
                 #Since this is the final request, turn flag to false to move to the next time period.
                 flag = False
                 next_token = None
-            #time.sleep(5)
+
     logging.info('user - %s - query for %s on Twitter returned %s tweets', user.get(), keyword, total_tweets)
     msg = f'Total # of Tweets added:  {total_tweets}'
     showinfo(
@@ -443,7 +437,7 @@ def redditCustomCMD():
     strResultSize = customResultSize.get()
     resultSize=int(strResultSize)
     #Warns the user
-    msg = f'This will take a while. You will receive a CSV with results when it is done.'
+    msg = f'This will take a while.\nYou will receive a CSV with results when it is done.'
     showinfo(
       title='Information',
       message=msg
@@ -511,9 +505,9 @@ def redditCustomCMD():
     #Creates a dataframe and pulls in the dictionary for processing
     df = pd.DataFrame(topics_dict)
     #Opens the output file, appends the data, closes the file
-    f = open("reddit.csv", "a", encoding='utf-8')
-    f.write(df.to_csv())
-    f.close
+    with open("reddit.csv", "a", encoding='utf-8') as f:
+      f.write(df.to_csv())
+
     logging.info('Custom search query has ended for %s on %s subreddit, requesting %s results', searchTerm, subName, resultSize) 
     #clears the custom config and repacks the main Reddit app
     redditCustomConfig.pack_forget()
@@ -532,69 +526,65 @@ def append_to_csv(json_response, fileName):
     counter = 0
 
     #Open OR create the target CSV file
-    csvFile = open(fileName, "a", newline="", encoding='utf-8')
-    csvWriter = csv.writer(csvFile)
+    with open(fileName, "a", newline="", encoding='utf-8') as csvFile:
+      csvWriter = csv.writer(csvFile)
 
     #Loop through each tweet
-    for tweet in json_response['data']:
+      for tweet in json_response['data']:
 
-        # We will create a variable for each since some of the keys might not exist for some tweets
-        # So we will account for that
+          # We will create a variable for each since some of the keys might not exist for some tweets
+          # So we will account for that
 
-        # 1. Author ID
-        author_id = tweet['author_id']
+          # 1. Author ID
+          author_id = tweet['author_id']
 
-        # 2. Time created
-        created_at = dateutil.parser.parse(tweet['created_at'])
+          # 2. Time created
+          created_at = dateutil.parser.parse(tweet['created_at'])
 
-        # 3. Geolocation
-        if ('geo' in tweet):
-            geo = tweet['geo']['place_id']
-        else:
-            geo = " "
+          # 3. Geolocation
+          if ('geo' in tweet):
+              geo = tweet['geo']['place_id']
+          else:
+              geo = " "
 
-        # 4. Tweet ID
-        tweet_id = tweet['id']
+          # 4. Tweet ID
+          tweet_id = tweet['id']
 
-        # 5. Language
-        lang = tweet['lang']
+          # 5. Language
+          lang = tweet['lang']
 
-        # 6. Tweet metrics
-        retweet_count = tweet['public_metrics']['retweet_count']
-        reply_count = tweet['public_metrics']['reply_count']
-        like_count = tweet['public_metrics']['like_count']
-        quote_count = tweet['public_metrics']['quote_count']
+          # 6. Tweet metrics
+          retweet_count = tweet['public_metrics']['retweet_count']
+          reply_count = tweet['public_metrics']['reply_count']
+          like_count = tweet['public_metrics']['like_count']
+          quote_count = tweet['public_metrics']['quote_count']
 
-        # 7. source
-        source = tweet['source']
+          # 7. source
+          source = tweet['source']
 
-        # 8. Tweet text
-        text = tweet['text']
+          # 8. Tweet text
+          text = tweet['text']
 
-        # 8a. Calculate Sentiment
-        sia = SIA()
-        stopWords = set(stopwords.words('english'))
-        wordTokenize = word_tokenize(text)
-        filteredSentence = [w for w in wordTokenize if not w.lower() in stopWords]
-        filteredSentence = []
-        for w in wordTokenize:
-          if w not in stopWords:
-            filteredSentence.append(w)
-        polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
-        posScore = polarityScore['pos']
-        negScore = polarityScore['neg']
-        neuScore = polarityScore['neu']
-        compScore = polarityScore['compound']
-        # Assemble all data in a list
-        res = [author_id, created_at, geo, tweet_id, lang, like_count, quote_count, reply_count, retweet_count, source, text, posScore, negScore, neuScore, compScore]
+          # 8a. Calculate Sentiment
+          sia = SIA()
+          stopWords = set(stopwords.words('english'))
+          wordTokenize = word_tokenize(text)
+          filteredSentence = [w for w in wordTokenize if not w.lower() in stopWords]
+          filteredSentence = []
+          for w in wordTokenize:
+            if w not in stopWords:
+              filteredSentence.append(w)
+          polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
+          posScore = polarityScore['pos']
+          negScore = polarityScore['neg']
+          neuScore = polarityScore['neu']
+          compScore = polarityScore['compound']
+          # Assemble all data in a list
+          res = [author_id, created_at, geo, tweet_id, lang, like_count, quote_count, reply_count, retweet_count, source, text, posScore, negScore, neuScore, compScore]
 
-        # Append the result to the CSV file
-        csvWriter.writerow(res)
-        counter += 1
-
-    # When done, close the CSV file
-    csvFile.close()
-
+          # Append the result to the CSV file
+          csvWriter.writerow(res)
+          counter += 1
 
 # Creates and packs the sign in frame
 signin = ttk.Frame(root)
