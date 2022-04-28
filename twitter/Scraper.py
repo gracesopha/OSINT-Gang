@@ -31,14 +31,12 @@ def create_headers(bearer_token):
     headers = {"Authorization": "Bearer {}".format(bearer_token)}
     return headers
 
-def create_url(keyword, start_date, end_date, max_results = 10):
+def create_url(keyword, max_results = 10):
 
     search_url = "https://api.twitter.com/2/tweets/search/recent" #Change to the endpoint you want to collect data from
 
     #change params based on the endpoint you are using
     query_params = {'query': keyword,
-                    'start_time': start_date,
-                    'end_time': end_date,
                     'max_results': max_results,
                     'expansions': 'author_id,in_reply_to_user_id,geo.place_id',
                     'tweet.fields': 'id,text,author_id,in_reply_to_user_id,geo,conversation_id,created_at,lang,public_metrics,referenced_tweets,reply_settings,source',
@@ -125,9 +123,6 @@ def append_to_csv(json_response, fileName):
 bearer_token = auth()
 headers = create_headers(bearer_token)
 keyword = inputkeyword
-start_list =    ['2022-04-18T00:00:00.000Z']
-
-end_list =      ['2022-04-21T00:00:00.000Z']
 max_results = 100
 
 #Total number of tweets we collected from the loop
@@ -141,7 +136,7 @@ csvWriter = csv.writer(csvFile)
 csvWriter.writerow(['author id', 'created_at', 'geo', 'id','lang', 'like_count', 'quote_count', 'reply_count','retweet_count','source','tweet'])
 csvFile.close()
 
-for i in range(0,len(start_list)):
+for i in range(0,3):
 
     # Inputs
     count = 0 # Counting tweets per time period
@@ -156,7 +151,7 @@ for i in range(0,len(start_list)):
             break
         print("-------------------")
         print("Token: ", next_token)
-        url = create_url(keyword, start_list[i],end_list[i], max_results)
+        url = create_url(keyword, max_results)
         json_response = connect_to_endpoint(url[0], headers, url[1], next_token)
         result_count = json_response['meta']['result_count']
 
@@ -165,7 +160,6 @@ for i in range(0,len(start_list)):
             next_token = json_response['meta']['next_token']
             print("Next Token: ", next_token)
             if result_count is not None and result_count > 0 and next_token is not None:
-                print("Start Date: ", start_list[i])
                 append_to_csv(json_response, "data.csv")
                 count += result_count
                 total_tweets += result_count
@@ -176,7 +170,6 @@ for i in range(0,len(start_list)):
         else:
             if result_count is not None and result_count > 0:
                 print("-------------------")
-                print("Start Date: ", start_list[i])
                 append_to_csv(json_response, "data.csv")
                 count += result_count
                 total_tweets += result_count
