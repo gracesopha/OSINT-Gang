@@ -358,7 +358,7 @@ def twitterCMD():
     csvWriter = csv.writer(csvFile)
 
     #Create headers for the data you want to save, in this example, we only want save these columns in our dataset
-    csvWriter.writerow(['author id', 'created_at', 'geo', 'id','lang', 'like_count', 'quote_count', 'reply_count','retweet_count','source','tweet'])
+    csvWriter.writerow(['author id', 'created_at', 'geo', 'id','lang', 'like_count', 'quote_count', 'reply_count','retweet_count','source','tweet','Positive_Score','Negative_Score','Neutral_Score','Compound_Score'])
     csvFile.close()
 
     for i in range(0,resultSize):
@@ -396,7 +396,7 @@ def twitterCMD():
                     append_to_csv(json_response, "twitter.csv")
                     count += result_count
                     total_tweets += result_count
-                    
+                    print(json_response)
                     msg = f'# of Tweets added this pass:  {count} \n Total # of tweets added: {total_tweets}'
                     showinfo(
                       title='Information',
@@ -479,7 +479,6 @@ def redditCustomCMD():
       
       #For loop to iterate through replies to the previous comment
       for i in sub.comments.list():
-        print(i.id)
         #Calculate Sentiment
         sia = SIA()
         stopWords = set(stopwords.words('english'))
@@ -573,8 +572,22 @@ def append_to_csv(json_response, fileName):
         # 8. Tweet text
         text = tweet['text']
 
+        # 8a. Calculate Sentiment
+        sia = SIA()
+        stopWords = set(stopwords.words('english'))
+        wordTokenize = word_tokenize(text)
+        filteredSentence = [w for w in wordTokenize if not w.lower() in stopWords]
+        filteredSentence = []
+        for w in wordTokenize:
+          if w not in stopWords:
+            filteredSentence.append(w)
+        polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
+        posScore = polarityScore['pos']
+        negScore = polarityScore['neg']
+        neuScore = polarityScore['neu']
+        compScore = polarityScore['compound']
         # Assemble all data in a list
-        res = [author_id, created_at, geo, tweet_id, lang, like_count, quote_count, reply_count, retweet_count, source, text]
+        res = [author_id, created_at, geo, tweet_id, lang, like_count, quote_count, reply_count, retweet_count, source, text, posScore, negScore, neuScore, compScore]
 
         # Append the result to the CSV file
         csvWriter.writerow(res)
@@ -583,8 +596,6 @@ def append_to_csv(json_response, fileName):
     # When done, close the CSV file
     csvFile.close()
 
-    # Print the number of tweets for this iteration
-    print("# of Tweets added from this response: ", counter)
 
 # Creates and packs the sign in frame
 signin = ttk.Frame(root)
