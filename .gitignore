@@ -8,3 +8,4 @@ reddit_app.log
 auth.yaml
 .vscode/settings.json
 reddit.csv
+twitter.csv
