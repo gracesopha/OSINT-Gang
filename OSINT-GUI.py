@@ -67,7 +67,7 @@ def create_headers(bearer_token):
 def connect_to_endpoint(url, headers, params, next_token = None):
     params['next_token'] = next_token   #params object received from create_url function
     response = requests.request("GET", url, headers = headers, params = params)
-    print("Endpoint Response Code: " + str(response.status_code))
+    logging.debug('Twitter API Response Code: %s',str(response.status_code))
     if response.status_code != 200:
         raise Exception(response.status_code, response.text)
     return response.json()
@@ -360,12 +360,17 @@ def twitterCMD():
     #Create headers for the data you want to save, in this example, we only want save these columns in our dataset
     csvWriter.writerow(['author id', 'created_at', 'geo', 'id','lang', 'like_count', 'quote_count', 'reply_count','retweet_count','source','tweet','Positive_Score','Negative_Score','Neutral_Score','Compound_Score'])
     csvFile.close()
+    msg = f'Scraping {resultSize} tweets\nThis might take a while, please be patient.'
+    showinfo(
+      title='Information',
+      message=msg
+      )
 
-    for i in range(0,resultSize):
+    for i in range(0,1):
         logging.info('user - %s has run a query for %s on Twitter', user.get(), keyword)
         # Inputs
         count = 0 # Counting tweets per time period
-        max_count = 100 # Max tweets per time period
+        max_count = resultSize # Max tweets per time period
         flag = True
         next_token = None
 
@@ -385,23 +390,17 @@ def twitterCMD():
                     append_to_csv(json_response, "twitter.csv")
                     count += result_count
                     total_tweets += result_count
-                    msg = f'# of Tweets added this pass:  {count} \n Total # of tweets added: {total_tweets}'
-                    showinfo(
-                      title='Information',
-                      message=msg
-                    )
             # If no next token exists
             else:
                 if result_count is not None and result_count > 0:
                     append_to_csv(json_response, "twitter.csv")
                     count += result_count
                     total_tweets += result_count
-                    print(json_response)
-                    msg = f'# of Tweets added this pass:  {count} \n Total # of tweets added: {total_tweets}'
-                    showinfo(
-                      title='Information',
-                      message=msg
-                    )
+                   # msg = f'# of Tweets added this pass:  {count} \n Total # of tweets added: {total_tweets}'
+                   # showinfo(
+                   #   title='Information',
+                   #   message=msg
+                   #)
                 #Since this is the final request, turn flag to false to move to the next time period.
                 flag = False
                 next_token = None
@@ -682,7 +681,7 @@ redditApp = ttk.Frame(root)
 
 #Twitter Landing Frame
 twitterApp = ttk.Frame(root)
-twitterLabel1 = ttk.Label(twitterApp, text="Please enter a search termand number of passes.")
+twitterLabel1 = ttk.Label(twitterApp, text="Please enter a search term and number of tweets to retreive.")
 twitterLabel1.pack(fill='x', expand=True, pady=10)
 twitterSearchEntry = ttk.Entry(twitterApp, textvariable=searchInput)
 twitterSearchEntry.pack(fill='x', expand=True, pady=10)
