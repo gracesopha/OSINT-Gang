@@ -128,6 +128,7 @@ def loginClicked():
       
       #Compares the hashed input against the user's password from the database
       if pwHash == userDict[user.get()]:
+        
         #Log successful login
         logging.info('user - %s has successfully logged in', user.get()) 
         #Welcome and disclaimer messages
@@ -145,7 +146,6 @@ def loginClicked():
         #Clears the sign in window, packs the main app window
         signin.pack_forget()
         mainApp.pack(padx=160, pady=30, fill='x', expand=True)
-      
       #Error on invalid password
       else: 
         logging.warning('user - %s submitted an invalid password attempt', user.get()) 
