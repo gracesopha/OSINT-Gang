@@ -319,14 +319,12 @@ def redditDefaultCMD():
     redditDefaultApp.pack_forget()
     redditApp.pack()
 
-def create_url(keyword, start_date, end_date, max_results = 10):
+def create_url(keyword, max_results = 10):
 
     search_url = "https://api.twitter.com/2/tweets/search/recent" #Change to the endpoint you want to collect data from
 
     #change params based on the endpoint you are using
     query_params = {'query': keyword,
-                    'start_time': start_date,
-                    'end_time': end_date,
                     'max_results': max_results,
                     'expansions': 'author_id,in_reply_to_user_id,geo.place_id',
                     'tweet.fields': 'id,text,author_id,in_reply_to_user_id,geo,conversation_id,created_at,lang,public_metrics,referenced_tweets,reply_settings,source',
@@ -337,87 +335,83 @@ def create_url(keyword, start_date, end_date, max_results = 10):
 
 #Runs the Twitter search
 def twitterCMD():
-  #Inputs for tweets
-  bearer_token = auth()
-  headers = create_headers(bearer_token)
-  keyword = searchInput.get()
-  start_list =    ['2022-04-22T00:00:00.000Z']
+  if len(searchInput.get()) == 0:
+      msg3 = 'Query can\'t be empty'
+      showerror(
+        title='Error',
+        message=msg3
+      )
+      logging.warning('user - %s  has attempted a blank custom query', user.get())   
+  else:
+    #Inputs for tweets
+    bearer_token = auth()
+    headers = create_headers(bearer_token)
+    keyword = searchInput.get()
+    max_results = 100
+    strResultSize = customResultSize.get()
+    resultSize=int(strResultSize)
+    #Total number of tweets we collected from the loop
+    total_tweets = 0
 
-  end_list =      ['2022-04-28T00:00:00.000Z']
-  max_results = 100
- 
-  #Total number of tweets we collected from the loop
-  total_tweets = 0
+    # Create file
+    csvFile = open("twitter.csv", "a", newline="", encoding='utf-8')
+    csvWriter = csv.writer(csvFile)
 
-  # Create file
-  csvFile = open("twitter.csv", "a", newline="", encoding='utf-8')
-  csvWriter = csv.writer(csvFile)
+    #Create headers for the data you want to save, in this example, we only want save these columns in our dataset
+    csvWriter.writerow(['author id', 'created_at', 'geo', 'id','lang', 'like_count', 'quote_count', 'reply_count','retweet_count','source','tweet'])
+    csvFile.close()
 
-  #Create headers for the data you want to save, in this example, we only want save these columns in our dataset
-  csvWriter.writerow(['author id', 'created_at', 'geo', 'id','lang', 'like_count', 'quote_count', 'reply_count','retweet_count','source','tweet'])
-  csvFile.close()
+    for i in range(0,resultSize):
+        logging.info('user - %s has run a query for %s on Twitter', user.get(), keyword)
+        # Inputs
+        count = 0 # Counting tweets per time period
+        max_count = 100 # Max tweets per time period
+        flag = True
+        next_token = None
 
-  for i in range(0,len(start_list)):
-      logging.info('user - %s has run a query for %s on Twitter', user.get(), keyword)
-      # Inputs
-      count = 0 # Counting tweets per time period
-      max_count = 100 # Max tweets per time period
-      flag = True
-      next_token = None
+        # Check if flag is true
+        while flag:
+            # Check if max_count reached
+            if count >= max_count:
+                break
+            url = create_url(keyword, max_results)
+            json_response = connect_to_endpoint(url[0], headers, url[1], next_token)
+            result_count = json_response['meta']['result_count']
 
-      # Check if flag is true
-      while flag:
-          # Check if max_count reached
-          if count >= max_count:
-              break
-          print("-------------------")
-          print("Token: ", next_token)
-          url = create_url(keyword, start_list[i],end_list[i], max_results)
-          json_response = connect_to_endpoint(url[0], headers, url[1], next_token)
-          result_count = json_response['meta']['result_count']
-
-          if 'next_token' in json_response['meta']:
-              # Save the token to use for next call
-              next_token = json_response['meta']['next_token']
-              print("Next Token: ", next_token)
-              if result_count is not None and result_count > 0 and next_token is not None:
-                  print("Start Date: ", start_list[i])
-                  append_to_csv(json_response, "twitter.csv")
-                  count += result_count
-                  total_tweets += result_count
-                  logging.info('user - %s - query for %s on Twitter returned %s tweets', user.get(), keyword, total_tweets)
-                  
-                  print("# of Tweets added: ", total_tweets)
-                  print("-------------------")
-                  #time.sleep(5)
-          # If no next token exists
-          else:
-              if result_count is not None and result_count > 0:
-                  print("-------------------")
-                  print("Start Date: ", start_list[i])
-                  append_to_csv(json_response, "twitter.csv")
-                  count += result_count
-                  total_tweets += result_count
-                  logging.info('user - %s - query for %s on Twitter returned %s tweets', user.get(), keyword, total_tweets)
-                  msg = f'# of Tweets added:  {total_tweets}'
-                  showinfo(
-                    title='Information',
-                    message=msg
-                  )
-                  print("Total # of Tweets added: ", total_tweets)
-                  print("-------------------")
-                  #time.sleep(5)
-
-              #Since this is the final request, turn flag to false to move to the next time period.
-              flag = False
-              next_token = None
-          #time.sleep(5)
-          msg = f'Total # of Tweets:  {total_tweets}'
-          showinfo(
-            title='Information',
-            message=msg
-            )
-  print("Total number of results: ", total_tweets)
+            if 'next_token' in json_response['meta']:
+                # Save the token to use for next call
+                next_token = json_response['meta']['next_token']
+                if result_count is not None and result_count > 0 and next_token is not None:
+                    append_to_csv(json_response, "twitter.csv")
+                    count += result_count
+                    total_tweets += result_count
+                    msg = f'# of Tweets added this pass:  {count} \n Total # of tweets added: {total_tweets}'
+                    showinfo(
+                      title='Information',
+                      message=msg
+                    )
+            # If no next token exists
+            else:
+                if result_count is not None and result_count > 0:
+                    append_to_csv(json_response, "twitter.csv")
+                    count += result_count
+                    total_tweets += result_count
+                    
+                    msg = f'# of Tweets added this pass:  {count} \n Total # of tweets added: {total_tweets}'
+                    showinfo(
+                      title='Information',
+                      message=msg
+                    )
+                #Since this is the final request, turn flag to false to move to the next time period.
+                flag = False
+                next_token = None
+            #time.sleep(5)
+    logging.info('user - %s - query for %s on Twitter returned %s tweets', user.get(), keyword, total_tweets)
+    msg = f'Total # of Tweets added:  {total_tweets}'
+    showinfo(
+      title='Information',
+      message=msg
+      )
 
 #Loads the Reddit custom search config page
 def redditCustomCfg():
@@ -677,10 +671,12 @@ redditApp = ttk.Frame(root)
 
 #Twitter Landing Frame
 twitterApp = ttk.Frame(root)
-twitterLabel1 = ttk.Label(twitterApp, text="Please enter a search term, then select default or custom parameters.")
+twitterLabel1 = ttk.Label(twitterApp, text="Please enter a search termand number of passes.")
 twitterLabel1.pack(fill='x', expand=True, pady=10)
 twitterSearchEntry = ttk.Entry(twitterApp, textvariable=searchInput)
 twitterSearchEntry.pack(fill='x', expand=True, pady=10)
+twitterSearchEntry1 = ttk.Entry(twitterApp, textvariable=customResultSize)
+twitterSearchEntry1.pack(fill='x', expand=True, pady=10)
 twitterSearchEntry.focus()
 twitterScrapeButton = ttk.Button(twitterApp, text="Scrape", command=twitterCMD)
 twitterScrapeButton.pack(fill='x', expand=True, pady=10)
