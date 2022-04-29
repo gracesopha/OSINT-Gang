@@ -9,3 +9,5 @@ auth.yaml
 .vscode/settings.json
 reddit.csv
 twitter.csv
+.pylintrc
+pylint.txt

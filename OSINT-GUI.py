@@ -1,35 +1,31 @@
-#This program allows for scraping details from the Reddit API directly using 
+#This program allows for scraping details from the Reddit API directly using
 #Reddit API credentials stored in a local auth.yaml file.
 #Results are returned to a CSV file
+
+import datetime
+import csv
+# For saving access tokens and for file management when creating and adding to the dataset
+import os
+import tkinter as tk
+import hashlib
+import logging
+from tkinter import ttk
+from tkinter.messagebox import showinfo
+from tkinter.messagebox import showerror
 # For sending GET requests from the API
 import requests
 #For reading credentials from yaml file
 import yaml
-# For dealing with json responses we receive from the API
-import json
 #For connecting to reddit's API
 import praw
 # For displaying the data after
 import pandas as pd
 #For processing comments/tweets and extracting the sentiment
 import nltk
-import datetime
-import dateutil.parser
-import unicodedata
-import csv
-#To add wait time between requests
-import time
-# For saving access tokens and for file management when creating and adding to the dataset
-import os
-import tkinter as tk
-import hashlib
-import logging
 from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-from tkinter import ttk
-from tkinter.messagebox import showinfo
-from tkinter.messagebox import showerror
+import dateutil.parser
 
 #Sets up logging
 logging.basicConfig(filename='reddit_app.log', encoding='utf-8', level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s', datefmt='%m/%d/%Y %I:%M:%S %p')
@@ -43,36 +39,35 @@ nltk.download('punkt')
 #Pulls the Reddit API Credentials
 REDDIT_CONFIG_FILE = 'auth.yaml'
 
-with open(REDDIT_CONFIG_FILE, 'r') as config_file:
+with open(REDDIT_CONFIG_FILE, 'r', encoding='utf-8') as config_file:
   config = yaml.safe_load(config_file)
   redditId = config['reddit']['id']
   redditSecret = config['reddit']['secret']
   tokenvalue = config['twitter']['key']
-  usrername = config
- 
- 
+  #usrername = config
+
 #Sets up the Reddit API connection
-reddit_read_only = praw.Reddit(client_id=redditId,      
-                               client_secret=redditSecret,      
+reddit_read_only = praw.Reddit(client_id=redditId,
+                               client_secret=redditSecret,
                                user_agent="windows:ITMS548-OSINT:v.9 (by u/CampaignSpiritual333")
 
 #Sets up the Twitter API connection
 os.environ['TOKEN'] = tokenvalue
 
 def auth():
-    return os.getenv('TOKEN')
+  return os.getenv('TOKEN')
 
 def create_headers(bearer_token):
-    headers = {"Authorization": "Bearer {}".format(bearer_token)}
-    return headers
+  headers = {"Authorization": "Bearer {}".format(bearer_token)}
+  return headers
 
 def connect_to_endpoint(url, headers, params, next_token = None):
-    params['next_token'] = next_token   #params object received from create_url function
-    response = requests.request("GET", url, headers = headers, params = params)
-    logging.debug('Twitter API Response Code: %s',str(response.status_code))
-    if response.status_code != 200:
-        raise Exception(response.status_code, response.text)
-    return response.json()
+  params['next_token'] = next_token   #params object received from create_url function
+  response = requests.request("GET", url, headers = headers, params = params)
+  logging.debug('Twitter API Response Code: %s',str(response.status_code))
+  if response.status_code != 200:
+    raise Exception(response.status_code, response.text)
+  return response.json()
 
 #Set language of tweets to be searched for. Default: English
 keyword_lang = " lang:en"
@@ -115,63 +110,63 @@ commentCount = 1
 
 #Handles the login functionality
 def loginClicked():
-    #Pulls users and password hashes from the credential file
-    cred_filename = 'CredFile.txt'
-    pwDF=pd.read_csv(cred_filename,header=None)
-    userDict=dict(zip(pwDF[0].values,pwDF[1].values))
-  
-    #Loop to check if the user is in the file and if they have the correct password
-    if (user.get() in userDict):
-     
-      #Hashes the input password
-      pwHash = hashlib.sha512( str(password.get()).encode("utf-8") ).hexdigest()
-      
-      #Compares the hashed input against the user's password from the database
-      if pwHash == userDict[user.get()]:
-        
-        #Log successful login
-        logging.info('user - %s has successfully logged in', user.get()) 
-        #Welcome and disclaimer messages
-        msg = f'Hello: {user.get()} Welcome to the OSINT App.'
-        showinfo(
-            title='Information',
-            message=msg
-        )
-        msg2 = f'This will scrape Reddit or twitter. All access is logged, be responsible.'
-        showinfo(
-            title='Information',
-            message=msg2            
-        )
-      
-        #Clears the sign in window, packs the main app window
-        signin.pack_forget()
-        mainApp.pack(padx=160, pady=30, fill='x', expand=True)
-      #Error on invalid password
-      else: 
-        logging.warning('user - %s submitted an invalid password attempt', user.get()) 
-        msg = f'Invalid Username or Password'
-        showinfo(
-            title='Information',
-            message=msg
-        )
-    
-    #Error on invalid user    
-    else:
-      logging.warning('user - %s submitted an invalid username', user.get()) 
-      msg = f'Invalid Username or Password'
+  #Pulls users and password hashes from the credential file
+  cred_filename = 'CredFile.txt'
+  pwDF=pd.read_csv(cred_filename,header=None)
+  userDict=dict(zip(pwDF[0].values,pwDF[1].values))
+
+  #Loop to check if the user is in the file and if they have the correct password
+  if user.get() in userDict:
+
+    #Hashes the input password
+    pwHash = hashlib.sha512( str(password.get()).encode("utf-8") ).hexdigest()
+
+    #Compares the hashed input against the user's password from the database
+    if pwHash == userDict[user.get()]:
+
+      #Log successful login
+      logging.info('user: %s has successfully logged in', user.get())
+      #Welcome and disclaimer messages
+      msg = f'Hello: {user.get()} Welcome to the OSINT App.'
       showinfo(
-        title='Information',
-        message=msg
+          title='Information',
+          message=msg
       )
+      msg2 = 'This will scrape Reddit or Twitter. All access is logged, be responsible.'
+      showinfo(
+          title='Information',
+          message=msg2
+      )
+
+      #Clears the sign in window, packs the main app window
+      signIn.pack_forget()
+      mainApp.pack(padx=160, pady=30, fill='x', expand=True)
+      #Error on invalid password
+    else:
+      logging.warning('user: %s submitted an invalid password attempt', user.get())
+      msg = 'Invalid Username or Password'
+      showinfo(
+          title='Information',
+          message=msg
+      )
+
+  #Error on invalid user
+  else:
+    logging.warning('user: %s submitted an invalid username', user.get())
+    msg = 'Invalid Username or Password'
+    showinfo(
+      title='Information',
+      message=msg
+    )
 
 #Clears the main app window and creates the add new user window
 def addNewUser():
   if str(user.get()) == 'admin':
-    logging.info('user - %s has run the new user tool', user.get())
+    logging.info('user: %s has run the new user tool', user.get())
     mainApp.pack_forget()
     newUser.pack(padx=160, pady=30, fill='x', expand=True)
   else:
-    logging.info('user - %s has attempted to run the new user tool', user.get())
+    logging.info('user: %s has attempted to access the new user tool', user.get())
     msg3 = f'{user.get()} is not authorized to add new users'
     showerror(
       title='Error',
@@ -181,29 +176,29 @@ def addNewUser():
 def writeNewUser():
   #Verifies new username has been entered
   if len(newUsername.get()) == 0:
-        msg3 = 'Username can\'t be empty'
-        showerror(
-            title='Error',
-            message=msg3
-        )
+    msg3 = 'Username can\'t be empty'
+    showerror(
+        title='Error',
+        message=msg3
+    )
   else:
     #Verifies new password has been entered
     if len(newPassword.get()) == 0:
-        msg3 = 'Password can\'t be empty'
-        showerror(
-            title='Error',
-            message=msg3
-        )
-    else:    
+      msg3 = 'Password can\'t be empty'
+      showerror(
+          title='Error',
+        message=msg3
+      )
+    else:
       uName = newUsername.get()
-      logging.warning('user - %s created a new user %s', user.get(), newUsername.get()) 
+      logging.warning('user: %s created a new user %s', user.get(), newUsername.get())
 
       #Hashes the input password and stores it in the database
       pWordHashed = hashlib.sha512( str(newPassword.get()).encode("utf-8") ).hexdigest()
       #Writes new user to file
       with open("CredFile.txt", "a", encoding='utf-8') as cf:
         cf.write(uName+','+pWordHashed+ "\n")
-      #cf.close
+
       #Pop up to let people know it worked
       msg = f'New User {newUsername.get()} has been added'
       showinfo(
@@ -212,9 +207,9 @@ def writeNewUser():
       )
       newUser.pack_forget()
       mainApp.pack()
-#Clears the main app screen or custom config screen, packs the reddit main screen      
+#Clears the main app screen or custom config screen, packs the reddit main screen
 def redditButtonCMD():
-  logging.info('user - %s has run the reddit tool', user.get())
+  logging.info('user: %s has run the reddit tool', user.get())
   mainApp.pack_forget()
   redditCustomConfig.pack_forget()
   newUser.pack_forget()
@@ -222,22 +217,21 @@ def redditButtonCMD():
 
 #Clears the main app screen, packs the twitter button
 def twitterButtonCMD():
-  logging.info('user - %s has run the twitter tool', user.get())
+  logging.info('user: %s has run the twitter tool', user.get())
   mainApp.pack_forget()
   twitterApp.pack(padx=160, pady=30, fill='x', expand=True)
-  
-#Runs the Reddit default query  
+
+#Runs the Reddit default query
 def redditDefaultCMD():
   #Verifies a query was entered
   if len(searchInput.get()) == 0:
-        msg3 = 'Query can\'t be empty'
-        showerror(
-            title='Error',
-            message=msg3
-        )
-        logging.warning('user - %s  has attempted a blank default query', user.get())
+    msg3 = 'Query can\'t be empty'
+    showerror(
+        title='Error',
+        message=msg3
+    )
+    logging.warning('user: %s  has attempted a blank default query', user.get())
   else:
-    logging.info('user - %s ran a default reddit search for: %s', user.get(), searchTerm) 
     #Clears the Reddit main app
     redditApp.pack_forget()
     #Packs the Reddit Default screen
@@ -248,15 +242,16 @@ def redditDefaultCMD():
     redditDefaultLabel2.pack()
     searchTerm = searchInput.get()
     #Pops up warning
-    msg = f'This will take a while.\nYou will receive a CSV with results when it is done.'
+    logging.info('user: %s ran a default reddit search for: %s', user.get(), searchTerm)
+    msg = 'This will take a while.\nYou will receive a CSV with results when it is done.'
     showinfo(
       title='Information',
       message=msg
     )
-    logging.info('Starting default reddit search for %s', searchTerm) 
+    logging.info('Starting default reddit search for %s', searchTerm)
     #Searches all subreddits for the search term, iterates through 5000 of them
     for c in allSubs.search(searchTerm, limit=5000):
-      
+
       #Convert Submission Time to DateTime
       submissionTimeStamp=datetime.datetime.utcfromtimestamp(c.created).strftime('%Y-%m-%d %H:%M:%S')
 
@@ -294,10 +289,10 @@ def redditDefaultCMD():
           if w not in stopWords:
             filteredSentence.append(w)
         polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
-            
+
         #Convert Comment Time to DateTime
         commentTimeStamp=datetime.datetime.utcfromtimestamp(i.created).strftime('%Y-%m-%d %H:%M:%S')
-      
+
         #Append to Dictionary
         topics_dict["title"].append(c.title)
         topics_dict["author"].append(i.author)
@@ -313,41 +308,40 @@ def redditDefaultCMD():
         topics_dict["sentimentPos"].append(polarityScore['pos'])
         topics_dict["sentimentNeg"].append(polarityScore['neg'])
         topics_dict["sentimentNeu"].append(polarityScore['neu'])
-        topics_dict["sentimentComp"].append(polarityScore['compound']) 
-    
+        topics_dict["sentimentComp"].append(polarityScore['compound'])
+
     #Pulls the dictionary into a dataframe for processing
     df = pd.DataFrame(topics_dict)
     #Opens the output file, appends the dataframe contents
     with open("reddit.csv", "a", encoding='utf-8') as f:
       f.write(df.to_csv())
-    logging.info('Ending default query for: %s', searchTerm) 
+    logging.info('Ending default query for: %s', searchTerm)
     #Clears the Reddit default query, repacks the main Reddit app
     redditDefaultApp.pack_forget()
     redditApp.pack()
 
 def create_url(keyword, max_results = 10):
+  search_url = "https://api.twitter.com/2/tweets/search/recent" #Change to the endpoint you want to collect data from
 
-    search_url = "https://api.twitter.com/2/tweets/search/recent" #Change to the endpoint you want to collect data from
-
-    #change params based on the endpoint you are using
-    query_params = {'query': keyword,
-                    'max_results': max_results,
-                    'expansions': 'author_id,in_reply_to_user_id,geo.place_id',
-                    'tweet.fields': 'id,text,author_id,in_reply_to_user_id,geo,conversation_id,created_at,lang,public_metrics,referenced_tweets,reply_settings,source',
-                    'user.fields': 'id,name,username,created_at,description,public_metrics,verified',
-                    'place.fields': 'full_name,id,country,country_code,geo,name,place_type',
-                    'next_token': {}}
-    return (search_url, query_params)
+  #change params based on the endpoint you are using
+  query_params = {'query': keyword,
+                  'max_results': max_results,
+                  'expansions': 'author_id,in_reply_to_user_id,geo.place_id',
+                  'tweet.fields': 'id,text,author_id,in_reply_to_user_id,geo,conversation_id,created_at,lang,public_metrics,referenced_tweets,reply_settings,source',
+                  'user.fields': 'id,name,username,created_at,description,public_metrics,verified',
+                  'place.fields': 'full_name,id,country,country_code,geo,name,place_type',
+                  'next_token': {}}
+  return (search_url, query_params)
 
 #Runs the Twitter search
 def twitterCMD():
   if len(searchInput.get()) == 0:
-      msg3 = 'Query can\'t be empty'
-      showerror(
-        title='Error',
-        message=msg3
-      )
-      logging.warning('user - %s  has attempted a blank custom query', user.get())   
+    msg3 = 'Query can\'t be empty'
+    showerror(
+      title='Error',
+      message=msg3
+    )
+    logging.warning('user: %s  has attempted a blank custom query', user.get())
   else:
     #Inputs for tweets
     bearer_token = auth()
@@ -355,7 +349,7 @@ def twitterCMD():
     keyword = searchInput.get()
     max_results = 100
     strResultSize = customResultSize.get()
-    resultSize=int(strResultSize)
+    twitterResultSize=int(strResultSize)
     #Total number of tweets we collected from the loop
     total_tweets = 0
 
@@ -365,48 +359,48 @@ def twitterCMD():
       #Create headers for the data you want to save, in this example, we only want save these columns in our dataset
       csvWriter.writerow(['author id', 'created_at', 'geo', 'id','lang', 'like_count', 'quote_count', 'reply_count','retweet_count','source','tweet','Positive_Score','Negative_Score','Neutral_Score','Compound_Score'])
 
-    msg = f'Scraping {resultSize} tweets\nThis might take a while, please be patient.'
+    msg = f'Scraping {twitterResultSize} tweets\nThis might take a while, please be patient.'
     showinfo(
       title='Information',
       message=msg
       )
 
     for i in range(0,1):
-        logging.info('user - %s has run a query for %s on Twitter', user.get(), keyword)
-        # Inputs
-        count = 0 # Counting tweets per time period
-        max_count = resultSize # Max tweets per time period
-        flag = True
-        next_token = None
+      logging.info('user: %s has run a query for %s on Twitter', user.get(), keyword)
+      # Inputs
+      count = 0 # Counting tweets per time period
+      max_count = twitterResultSize # Max tweets per time period
+      flag = True
+      next_token = None
 
-        # Check if flag is true
-        while flag:
-            # Check if max_count reached
-            if count >= max_count:
-                break
-            url = create_url(keyword, max_results)
-            json_response = connect_to_endpoint(url[0], headers, url[1], next_token)
-            result_count = json_response['meta']['result_count']
+      # Check if flag is true
+      while flag:
+        # Check if max_count reached
+        if count >= max_count:
+          break
+        url = create_url(keyword, max_results)
+        json_response = connect_to_endpoint(url[0], headers, url[1], next_token)
+        result_count = json_response['meta']['result_count']
 
-            if 'next_token' in json_response['meta']:
-                # Save the token to use for next call
-                next_token = json_response['meta']['next_token']
-                if result_count is not None and result_count > 0 and next_token is not None:
-                    append_to_csv(json_response, "twitter.csv")
-                    count += result_count
-                    total_tweets += result_count
-            # If no next token exists
-            else:
-                if result_count is not None and result_count > 0:
-                    append_to_csv(json_response, "twitter.csv")
-                    count += result_count
-                    total_tweets += result_count
-                   
-                #Since this is the final request, turn flag to false to move to the next time period.
-                flag = False
-                next_token = None
+        if 'next_token' in json_response['meta']:
+          # Save the token to use for next call
+          next_token = json_response['meta']['next_token']
+          if result_count is not None and result_count > 0 and next_token is not None:
+            append_to_csv(json_response, "twitter.csv")
+            count += result_count
+            total_tweets += result_count
+        # If no next token exists
+        else:
+          if result_count is not None and result_count > 0:
+            append_to_csv(json_response, "twitter.csv")
+            count += result_count
+            total_tweets += result_count
 
-    logging.info('user - %s - query for %s on Twitter returned %s tweets', user.get(), keyword, total_tweets)
+          #Since this is the final request, turn flag to false to move to the next time period.
+          flag = False
+          next_token = None
+
+    logging.info('user: %s - query for %s on Twitter returned %s tweets', user.get(), keyword, total_tweets)
     msg = f'Total # of Tweets added:  {total_tweets}'
     showinfo(
       title='Information',
@@ -417,18 +411,18 @@ def twitterCMD():
 def redditCustomCfg():
   #Verifies a query was entered
   if len(searchInput.get()) == 0:
-      msg3 = 'Query can\'t be empty'
-      showerror(
-        title='Error',
-        message=msg3
-      )
-      logging.warning('user - %s  has attempted a blank custom query', user.get())   
+    msg3 = 'Query can\'t be empty'
+    showerror(
+      title='Error',
+      message=msg3
+    )
+    logging.warning('user: %s  has attempted a blank custom query', user.get())
   else:
     #Clears the main Reddit app, packs the custom configuration page
     redditApp.pack_forget()
     redditCustomConfig.pack(padx=160, pady=30, fill='x', expand=True)
-    
-#Runs the scrape with the options from the custom configuration    
+
+#Runs the scrape with the options from the custom configuration
 def redditCustomCMD():
   if len(customSubs.get()) == 0:
     msg3 = 'Subreddit can\'t be empty'
@@ -436,23 +430,23 @@ def redditCustomCMD():
       title='Error',
       message=msg3
     )
-    logging.warning('user - %s  has attempted a blank custom query', user.get()) 
+    logging.warning('user: %s  has attempted a blank custom query', user.get())
   else:
     #Converts variables to useable forms
     searchTerm = searchInput.get()
     subName = reddit_read_only.subreddit(customSubs.get())
     strResultSize = customResultSize.get()
-    resultSize=int(strResultSize)
+    redditResultSize=int(strResultSize)
     #Warns the user
-    msg = f'This will take a while.\nYou will receive a CSV with results when it is done.'
+    msg = 'This will take a while.\nYou will receive a CSV with results when it is done.'
     showinfo(
       title='Information',
       message=msg
     )
-    logging.info('user - %s has run a custom query for %s on %s subreddit, requesting %s results', user.get(), searchTerm, subName, resultSize) 
+    logging.info('user: %s has run a custom query for %s on %s subreddit, requesting %s results', user.get(), searchTerm, subName, redditResultSize)
     #For loop to iterate through search results based on user input
-    logging.info('Custom search query has started for %s on %s subreddit, requesting %s results', searchTerm, subName, resultSize) 
-    for c in subName.search(searchTerm, limit=resultSize):
+    logging.info('Custom search query has started for %s on %s subreddit, requesting %s results', searchTerm, subName, redditResultSize)
+    for c in subName.search(searchTerm, limit=redditResultSize):
       #Convert Submission Time to DateTime
       submissionTimeStamp=datetime.datetime.utcfromtimestamp(c.created).strftime('%Y-%m-%d %H:%M:%S')
 
@@ -472,11 +466,11 @@ def redditCustomCMD():
       topics_dict["sentimentNeg"].append("")
       topics_dict["sentimentNeu"].append("")
       topics_dict["sentimentComp"].append("")
-      
+
       #Creates a "sub" object for the current comment to scrape all replies
       sub = reddit_read_only.submission(id=c.id)
       sub.comments.replace_more(limit=None)
-      
+
       #For loop to iterate through replies to the previous comment
       for i in sub.comments.list():
         #Calculate Sentiment
@@ -489,10 +483,10 @@ def redditCustomCMD():
           if w not in stopWords:
             filteredSentence.append(w)
         polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
-      
+
         #Convert Comment Time to DateTime
         commentTimeStamp=datetime.datetime.utcfromtimestamp(i.created).strftime('%Y-%m-%d %H:%M:%S')
-      
+
         #Append to Dictionary
         topics_dict["title"].append(c.title)
         topics_dict["author"].append(i.author)
@@ -515,102 +509,102 @@ def redditCustomCMD():
     with open("reddit.csv", "a", encoding='utf-8') as f:
       f.write(df.to_csv())
 
-    logging.info('Custom search query has ended for %s on %s subreddit, requesting %s results', searchTerm, subName, resultSize) 
+    logging.info('Custom search query has ended for %s on %s subreddit, requesting %s results', searchTerm, subName, redditResultSize)
     #clears the custom config and repacks the main Reddit app
     redditCustomConfig.pack_forget()
     redditApp.pack()
 
 #Clears the main Reddit app and packs the main app
 def mainAppCMD():
-  logging.info('user - %s has returned to the tool selection', user.get())
+  logging.info('user: %s has returned to the tool selection', user.get())
   redditApp.pack_forget()
   twitterApp.pack_forget()
-  mainApp.pack(padx=160, pady=30, fill='x', expand=True)      
+  mainApp.pack(padx=160, pady=30, fill='x', expand=True)
 
 def append_to_csv(json_response, fileName):
 
-    #A counter variable
-    counter = 0
+  #A counter variable
+  counter = 0
 
-    #Open OR create the target CSV file
-    with open(fileName, "a", newline="", encoding='utf-8') as csvFile:
-      csvWriter = csv.writer(csvFile)
+  #Open OR create the target CSV file
+  with open(fileName, "a", newline="", encoding='utf-8') as csvFile:
+    csvWriter = csv.writer(csvFile)
 
-    #Loop through each tweet
-      for tweet in json_response['data']:
+  #Loop through each tweet
+    for tweet in json_response['data']:
 
-          # We will create a variable for each since some of the keys might not exist for some tweets
-          # So we will account for that
+      # We will create a variable for each since some of the keys might not exist for some tweets
+      # So we will account for that
 
-          # 1. Author ID
-          author_id = tweet['author_id']
+      # 1. Author ID
+      author_id = tweet['author_id']
 
-          # 2. Time created
-          created_at = dateutil.parser.parse(tweet['created_at'])
+      # 2. Time created
+      created_at = dateutil.parser.parse(tweet['created_at'])
 
-          # 3. Geolocation
-          if ('geo' in tweet):
-              geo = tweet['geo']['place_id']
-          else:
-              geo = " "
+      # 3. Geolocation
+      if 'geo' in tweet:
+        geo = tweet['geo']['place_id']
+      else:
+        geo = " "
 
-          # 4. Tweet ID
-          tweet_id = tweet['id']
+      # 4. Tweet ID
+      tweet_id = tweet['id']
 
-          # 5. Language
-          lang = tweet['lang']
+      # 5. Language
+      lang = tweet['lang']
 
-          # 6. Tweet metrics
-          retweet_count = tweet['public_metrics']['retweet_count']
-          reply_count = tweet['public_metrics']['reply_count']
-          like_count = tweet['public_metrics']['like_count']
-          quote_count = tweet['public_metrics']['quote_count']
+      # 6. Tweet metrics
+      retweet_count = tweet['public_metrics']['retweet_count']
+      reply_count = tweet['public_metrics']['reply_count']
+      like_count = tweet['public_metrics']['like_count']
+      quote_count = tweet['public_metrics']['quote_count']
 
-          # 7. source
-          source = tweet['source']
+      # 7. source
+      source = tweet['source']
 
-          # 8. Tweet text
-          text = tweet['text']
+      # 8. Tweet text
+      text = tweet['text']
 
-          # 8a. Calculate Sentiment
-          sia = SIA()
-          stopWords = set(stopwords.words('english'))
-          wordTokenize = word_tokenize(text)
-          filteredSentence = [w for w in wordTokenize if not w.lower() in stopWords]
-          filteredSentence = []
-          for w in wordTokenize:
-            if w not in stopWords:
-              filteredSentence.append(w)
-          polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
-          posScore = polarityScore['pos']
-          negScore = polarityScore['neg']
-          neuScore = polarityScore['neu']
-          compScore = polarityScore['compound']
-          # Assemble all data in a list
-          res = [author_id, created_at, geo, tweet_id, lang, like_count, quote_count, reply_count, retweet_count, source, text, posScore, negScore, neuScore, compScore]
+      # 8a. Calculate Sentiment
+      sia = SIA()
+      stopWords = set(stopwords.words('english'))
+      wordTokenize = word_tokenize(text)
+      filteredSentence = [w for w in wordTokenize if not w.lower() in stopWords]
+      filteredSentence = []
+      for w in wordTokenize:
+        if w not in stopWords:
+          filteredSentence.append(w)
+      polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
+      posScore = polarityScore['pos']
+      negScore = polarityScore['neg']
+      neuScore = polarityScore['neu']
+      compScore = polarityScore['compound']
+      # Assemble all data in a list
+      res = [author_id, created_at, geo, tweet_id, lang, like_count, quote_count, reply_count, retweet_count, source, text, posScore, negScore, neuScore, compScore]
 
-          # Append the result to the CSV file
-          csvWriter.writerow(res)
-          counter += 1
+      # Append the result to the CSV file
+      csvWriter.writerow(res)
+      counter += 1
 
 # Creates and packs the sign in frame
-signin = ttk.Frame(root)
-signin.pack(padx=160, pady=30, fill='x', expand=True)
+signIn = ttk.Frame(root)
+signIn.pack(padx=160, pady=30, fill='x', expand=True)
 #Creates the username field and label
-user_label = ttk.Label(signin, text="Username:")
+user_label = ttk.Label(signIn, text="Username:")
 user_label.pack(fill='x', expand=True)
-user_entry = ttk.Entry(signin, textvariable=user)
+user_entry = ttk.Entry(signIn, textvariable=user)
 user_entry.pack(fill='x', expand=True)
 user_entry.focus()
 
 #Creates and packs the password field
-password_label = ttk.Label(signin, text="Password:")
+password_label = ttk.Label(signIn, text="Password:")
 password_label.pack(fill='x', expand=True)
-password_entry = ttk.Entry(signin, textvariable=password, show="*")
+password_entry = ttk.Entry(signIn, textvariable=password, show="*")
 password_entry.pack(fill='x', expand=True)
 
 #Creates the login button
-login_button = ttk.Button(signin, text="Login", command=loginClicked)
+login_button = ttk.Button(signIn, text="Login", command=loginClicked)
 login_button.pack(fill='x', expand=True, pady=10)
 
 #Creates and packs the main app
@@ -678,7 +672,7 @@ redditApp = ttk.Frame(root)
 
 #Twitter Landing Frame
 twitterApp = ttk.Frame(root)
-twitterLabel1 = ttk.Label(twitterApp, text="Please enter a search term and number of tweets to retreive.")
+twitterLabel1 = ttk.Label(twitterApp, text="Please enter a search term and number of tweets to retreive (Multiples of 100).")
 twitterLabel1.pack(fill='x', expand=True, pady=10)
 twitterSearchEntry = ttk.Entry(twitterApp, textvariable=searchInput)
 twitterSearchEntry.pack(fill='x', expand=True, pady=10)
@@ -696,7 +690,6 @@ redditLabel1.pack(fill='x', expand=True, pady=10)
 redditSearchEntry = ttk.Entry(redditApp, textvariable=searchInput)
 redditSearchEntry.pack(fill='x', expand=True, pady=10)
 redditSearchEntry.focus()
-
 
 #Default button and label
 redditDefaultButton = ttk.Button(redditApp, text="Default", command=redditDefaultCMD)
