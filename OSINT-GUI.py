@@ -166,10 +166,17 @@ def loginClicked():
 
 #Clears the main app window and creates the add new user window
 def addNewUser():
-  logging.info('user - %s has run the new user tool', user.get())
-  mainApp.pack_forget()
-  newUser.pack(padx=160, pady=30, fill='x', expand=True)
-
+  if str(user.get()) == 'admin':
+    logging.info('user - %s has run the new user tool', user.get())
+    mainApp.pack_forget()
+    newUser.pack(padx=160, pady=30, fill='x', expand=True)
+  else:
+    logging.info('user - %s has attempted to run the new user tool', user.get())
+    msg3 = f'{user.get()} is not authorized to add new users'
+    showerror(
+      title='Error',
+      message=msg3
+    )
 #Creates the new user from the input
 def writeNewUser():
   #Verifies new username has been entered
