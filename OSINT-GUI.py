@@ -23,6 +23,7 @@ import praw
 import pandas as pd
 #For processing comments/tweets and extracting the sentiment
 import nltk
+from praw.exceptions import *
 from nltk.sentiment.vader import SentimentIntensityAnalyzer as SIA
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
@@ -233,86 +234,94 @@ def redditDefaultCMD():
     )
     logging.warning('user: %s  has attempted a blank default query', user.get())
   else:
-    #Clears the Reddit main app
-    redditApp.pack_forget()
-    #Packs the Reddit Default screen
-    redditDefaultApp.pack(padx=160, pady=30, fill='x', expand=True)
-    redditDefaultLabel1 = ttk.Label(redditDefaultApp, text="Running now")
-    redditDefaultLabel1.pack()
-    redditDefaultLabel2 = ttk.Label(redditDefaultApp, text="This will take a while. You will receive a CSV with results when it is done.")
-    redditDefaultLabel2.pack()
-    searchTerm = searchInput.get()
-    #Pops up warning
-    logging.info('user: %s ran a default reddit search for: %s', user.get(), searchTerm)
-    msg = 'This will take a while.\nYou will receive a CSV with results when it is done.'
-    showinfo(
-      title='Information',
-      message=msg
-    )
-    logging.info('Starting default reddit search for %s', searchTerm)
-    #Searches all subreddits for the search term, iterates through 5000 of them
-    for c in allSubs.search(searchTerm, limit=5000):
+    try:
+      #Clears the Reddit main app
+      redditApp.pack_forget()
+      #Packs the Reddit Default screen
+      redditDefaultApp.pack(padx=160, pady=30, fill='x', expand=True)
+      redditDefaultLabel1 = ttk.Label(redditDefaultApp, text="Running now")
+      redditDefaultLabel1.pack()
+      redditDefaultLabel2 = ttk.Label(redditDefaultApp, text="This will take a while. You will receive a CSV with results when it is done.")
+      redditDefaultLabel2.pack()
+      searchTerm = searchInput.get()
+      #Pops up warning
+      logging.info('user: %s ran a default reddit search for: %s', user.get(), searchTerm)
+      msg = 'This will take a while.\nYou will receive a CSV with results when it is done.'
+      showinfo(
+        title='Information',
+        message=msg
+      )
+      logging.info('Starting default reddit search for %s', searchTerm)
+      #Searches all subreddits for the search term, iterates through 5000 of them
+      for c in allSubs.search(searchTerm, limit=5000):
 
-      #Convert Submission Time to DateTime
-      submissionTimeStamp=datetime.datetime.utcfromtimestamp(c.created).strftime('%Y-%m-%d %H:%M:%S')
+        #Convert Submission Time to DateTime
+        submissionTimeStamp=datetime.datetime.utcfromtimestamp(c.created).strftime('%Y-%m-%d %H:%M:%S')
 
-      #Append results to the dictionary
-      topics_dict["title"].append(c.title)
-      topics_dict["author"].append(c.author)
-      topics_dict["author_fullname"].append(c.author_fullname)
-      topics_dict["score"].append(c.score)
-      topics_dict["id"].append(c.id)
-      topics_dict["url"].append(c.url)
-      topics_dict["NumOfComments"].append(c.num_comments)
-      topics_dict["created"].append(submissionTimeStamp)
-      topics_dict["subreddit_name_prefixed"].append(c.subreddit_name_prefixed)
-      topics_dict["permalink"].append(c.permalink)
-      topics_dict["body"].append(c.selftext)
-      topics_dict["sentimentPos"].append("")
-      topics_dict["sentimentNeg"].append("")
-      topics_dict["sentimentNeu"].append("")
-      topics_dict["sentimentComp"].append("")
-
-      #Creates a "sub" object for the current comment to scrape all replies
-      sub = reddit_read_only.submission(id=c.id)
-      sub.comments.replace_more(limit=None)
-
-      #For loop to iterate through replies to the previous comment
-      for i in sub.comments.list():
-        #Calculate Sentiment
-        sia = SIA()
-        #Imports stop words
-        stopWords = set(stopwords.words('english'))
-        wordTokenize = word_tokenize(i.body)
-        filteredSentence = [w for w in wordTokenize if not w.lower() in stopWords]
-        polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
-
-        #Convert Comment Time to DateTime
-        commentTimeStamp=datetime.datetime.utcfromtimestamp(i.created).strftime('%Y-%m-%d %H:%M:%S')
-
-        #Append to Dictionary
+        #Append results to the dictionary
         topics_dict["title"].append(c.title)
-        topics_dict["author"].append(i.author)
-        topics_dict["author_fullname"].append("")
-        topics_dict["score"].append(i.score)
-        topics_dict["id"].append(i.id)
+        topics_dict["author"].append(c.author)
+        topics_dict["author_fullname"].append(c.author_fullname)
+        topics_dict["score"].append(c.score)
+        topics_dict["id"].append(c.id)
         topics_dict["url"].append(c.url)
         topics_dict["NumOfComments"].append(c.num_comments)
-        topics_dict["created"].append(commentTimeStamp)
-        topics_dict["subreddit_name_prefixed"].append(i.subreddit_name_prefixed)
-        topics_dict["permalink"].append(i.permalink)
-        topics_dict["body"].append(i.body)
-        topics_dict["sentimentPos"].append(polarityScore['pos'])
-        topics_dict["sentimentNeg"].append(polarityScore['neg'])
-        topics_dict["sentimentNeu"].append(polarityScore['neu'])
-        topics_dict["sentimentComp"].append(polarityScore['compound'])
+        topics_dict["created"].append(submissionTimeStamp)
+        topics_dict["subreddit_name_prefixed"].append(c.subreddit_name_prefixed)
+        topics_dict["permalink"].append(c.permalink)
+        topics_dict["body"].append(c.selftext)
+        topics_dict["sentimentPos"].append("")
+        topics_dict["sentimentNeg"].append("")
+        topics_dict["sentimentNeu"].append("")
+        topics_dict["sentimentComp"].append("")
 
-    #Pulls the dictionary into a dataframe for processing
-    df = pd.DataFrame(topics_dict)
-    #Opens the output file, appends the dataframe contents
-    with open("reddit.csv", "a", encoding='utf-8') as f:
-      f.write(df.to_csv())
-    logging.info('Ending default query for: %s', searchTerm)
+        #Creates a "sub" object for the current comment to scrape all replies
+        sub = reddit_read_only.submission(id=c.id)
+        sub.comments.replace_more(limit=None)
+
+        #For loop to iterate through replies to the previous comment
+        for i in sub.comments.list():
+          #Calculate Sentiment
+          sia = SIA()
+          #Imports stop words
+          stopWords = set(stopwords.words('english'))
+          wordTokenize = word_tokenize(i.body)
+          filteredSentence = [w for w in wordTokenize if not w.lower() in stopWords]
+          polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
+
+          #Convert Comment Time to DateTime
+          commentTimeStamp=datetime.datetime.utcfromtimestamp(i.created).strftime('%Y-%m-%d %H:%M:%S')
+
+          #Append to Dictionary
+          topics_dict["title"].append(c.title)
+          topics_dict["author"].append(i.author)
+          topics_dict["author_fullname"].append("")
+          topics_dict["score"].append(i.score)
+          topics_dict["id"].append(i.id)
+          topics_dict["url"].append(c.url)
+          topics_dict["NumOfComments"].append(c.num_comments)
+          topics_dict["created"].append(commentTimeStamp)
+          topics_dict["subreddit_name_prefixed"].append(i.subreddit_name_prefixed)
+          topics_dict["permalink"].append(i.permalink)
+          topics_dict["body"].append(i.body)
+          topics_dict["sentimentPos"].append(polarityScore['pos'])
+          topics_dict["sentimentNeg"].append(polarityScore['neg'])
+          topics_dict["sentimentNeu"].append(polarityScore['neu'])
+          topics_dict["sentimentComp"].append(polarityScore['compound'])
+
+      #Pulls the dictionary into a dataframe for processing
+      df = pd.DataFrame(topics_dict)
+      #Opens the output file, appends the dataframe contents
+      with open("reddit.csv", "a", encoding='utf-8') as f:
+        f.write(df.to_csv())
+      logging.info('Ending default query for: %s', searchTerm)
+    except Exception as e:
+      logging.error('Error: %s', e)
+      msg4 = 'Search Error - Check your Reddit query'
+      showerror(
+        title='Error',
+        message=msg4
+      )  
     #Clears the Reddit default query, repacks the main Reddit app
     redditDefaultApp.pack_forget()
     redditApp.pack()
@@ -340,69 +349,77 @@ def twitterCMD():
     )
     logging.warning('user: %s  has attempted a blank custom query', user.get())
   else:
-    #Inputs for tweets
-    bearer_token = auth()
-    headers = create_headers(bearer_token)
-    keyword = searchInput.get()
-    max_results = 100
-    strResultSize = customResultSize.get()
-    twitterResultSize=int(strResultSize)
-    #Total number of tweets we collected from the loop
-    total_tweets = 0
+    try:
+      #Inputs for tweets
+      bearer_token = auth()
+      headers = create_headers(bearer_token)
+      keyword = searchInput.get()
+      max_results = 100
+      strResultSize = customResultSize.get()
+      twitterResultSize=int(strResultSize)
+      #Total number of tweets we collected from the loop
+      total_tweets = 0
 
-    # Create file
-    with open("twitter.csv", "a", newline="", encoding='utf-8') as csvFile:
-      csvWriter = csv.writer(csvFile)
-      #Create headers for the data you want to save, in this example, we only want save these columns in our dataset
-      csvWriter.writerow(['author id', 'created_at', 'geo', 'id','lang', 'like_count', 'quote_count', 'reply_count','retweet_count','source','tweet','Positive_Score','Negative_Score','Neutral_Score','Compound_Score'])
+      # Create file
+      with open("twitter.csv", "a", newline="", encoding='utf-8') as csvFile:
+        csvWriter = csv.writer(csvFile)
+        #Create headers for the data you want to save, in this example, we only want save these columns in our dataset
+        csvWriter.writerow(['author id', 'created_at', 'geo', 'id','lang', 'like_count', 'quote_count', 'reply_count','retweet_count','source','tweet','Positive_Score','Negative_Score','Neutral_Score','Compound_Score'])
 
-    msg = f'Scraping {twitterResultSize} tweets\nThis might take a while, please be patient.'
-    showinfo(
-      title='Information',
-      message=msg
-      )
+      msg = f'Scraping {twitterResultSize} tweets\nThis might take a while, please be patient.'
+      showinfo(
+        title='Information',
+        message=msg
+        )
 
-    for i in range(0,1):
-      logging.info('user: %s has run a query for %s on Twitter', user.get(), keyword)
-      # Inputs
-      count = 0 # Counting tweets per time period
-      max_count = twitterResultSize # Max tweets per time period
-      flag = True
-      next_token = None
+      for i in range(0,1):
+        logging.info('user: %s has run a query for %s on Twitter', user.get(), keyword)
+        # Inputs
+        count = 0 # Counting tweets per time period
+        max_count = twitterResultSize # Max tweets per time period
+        flag = True
+        next_token = None
 
-      # Check if flag is true
-      while flag:
-        # Check if max_count reached
-        if count >= max_count:
-          break
-        url = create_url(keyword, max_results)
-        json_response = connect_to_endpoint(url[0], headers, url[1], next_token)
-        result_count = json_response['meta']['result_count']
+        # Check if flag is true
+        while flag:
+          # Check if max_count reached
+          if count >= max_count:
+            break
+          url = create_url(keyword, max_results)
+          json_response = connect_to_endpoint(url[0], headers, url[1], next_token)
+          result_count = json_response['meta']['result_count']
 
-        if 'next_token' in json_response['meta']:
-          # Save the token to use for next call
-          next_token = json_response['meta']['next_token']
-          if result_count is not None and result_count > 0 and next_token is not None:
-            append_to_csv(json_response, "twitter.csv")
-            count += result_count
-            total_tweets += result_count
-        # If no next token exists
-        else:
-          if result_count is not None and result_count > 0:
-            append_to_csv(json_response, "twitter.csv")
-            count += result_count
-            total_tweets += result_count
+          if 'next_token' in json_response['meta']:
+            # Save the token to use for next call
+            next_token = json_response['meta']['next_token']
+            if result_count is not None and result_count > 0 and next_token is not None:
+              append_to_csv(json_response, "twitter.csv")
+              count += result_count
+              total_tweets += result_count
+          # If no next token exists
+          else:
+            if result_count is not None and result_count > 0:
+              append_to_csv(json_response, "twitter.csv")
+              count += result_count
+              total_tweets += result_count
 
-          #Since this is the final request, turn flag to false to move to the next time period.
-          flag = False
-          next_token = None
+            #Since this is the final request, turn flag to false to move to the next time period.
+            flag = False
+            next_token = None
 
-    logging.info('user: %s - query for %s on Twitter returned %s tweets', user.get(), keyword, total_tweets)
-    msg = f'Total # of Tweets added:  {total_tweets}'
-    showinfo(
-      title='Information',
-      message=msg
-      )
+      logging.info('user: %s - query for %s on Twitter returned %s tweets', user.get(), keyword, total_tweets)
+      msg = f'Total # of Tweets added:  {total_tweets}'
+      showinfo(
+        title='Information',
+        message=msg
+        )
+    except Exception as e:
+      logging.error('Twitter Query Error: %s', e)
+      msg4 = 'Search Error - Check your settings'
+      showerror(
+        title='Error',
+        message=msg4
+        )
 
 #Loads the Reddit custom search config page
 def redditCustomCfg():
@@ -445,59 +462,67 @@ def redditCustomCMD():
     logging.info('user: %s has run a custom query for %s on %s subreddit, requesting %s submissions and  %s comments', user.get(), searchTerm, subName, redditResultSize, redditCommentSize)
     #For loop to iterate through search results based on user input
     logging.info('Custom search query has started for %s on %s subreddit, requesting %s submissions and  %s comments', searchTerm, subName, redditResultSize, redditCommentSize)
-    for c in subName.search(searchTerm, limit=redditResultSize):
-      #Convert Submission Time to DateTime
-      submissionTimeStamp=datetime.datetime.utcfromtimestamp(c.created).strftime('%Y-%m-%d %H:%M:%S')
+    try:
+      for c in subName.search(searchTerm, limit=redditResultSize):
+        #Convert Submission Time to DateTime
+        submissionTimeStamp=datetime.datetime.utcfromtimestamp(c.created).strftime('%Y-%m-%d %H:%M:%S')
 
-      #Append results to the dictionary
-      topics_dict["title"].append(c.title)
-      topics_dict["author"].append(c.author)
-      topics_dict["author_fullname"].append(c.author_fullname)
-      topics_dict["score"].append(c.score)
-      topics_dict["id"].append(c.id)
-      topics_dict["url"].append(c.url)
-      topics_dict["NumOfComments"].append(c.num_comments)
-      topics_dict["created"].append(submissionTimeStamp)
-      topics_dict["subreddit_name_prefixed"].append(c.subreddit_name_prefixed)
-      topics_dict["permalink"].append(c.permalink)
-      topics_dict["body"].append(c.selftext)
-      topics_dict["sentimentPos"].append("")
-      topics_dict["sentimentNeg"].append("")
-      topics_dict["sentimentNeu"].append("")
-      topics_dict["sentimentComp"].append("")
-
-      #Creates a "sub" object for the current comment to scrape all replies
-      sub = reddit_read_only.submission(id=c.id)
-      sub.comments.replace_more(limit=redditCommentSize)
-
-      #For loop to iterate through replies to the previous comment
-      for i in sub.comments.list():
-        #Calculate Sentiment
-        sia = SIA()
-        stopWords = set(stopwords.words('english'))
-        wordTokenize = word_tokenize(i.body)
-        filteredSentence = [w for w in wordTokenize if not w.lower() in stopWords]
-        polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
-
-        #Convert Comment Time to DateTime
-        commentTimeStamp=datetime.datetime.utcfromtimestamp(i.created).strftime('%Y-%m-%d %H:%M:%S')
-
-        #Append to Dictionary
+        #Append results to the dictionary
         topics_dict["title"].append(c.title)
-        topics_dict["author"].append(i.author)
-        topics_dict["author_fullname"].append("")
-        topics_dict["score"].append(i.score)
-        topics_dict["id"].append(i.id)
+        topics_dict["author"].append(c.author)
+        topics_dict["author_fullname"].append(c.author_fullname)
+        topics_dict["score"].append(c.score)
+        topics_dict["id"].append(c.id)
         topics_dict["url"].append(c.url)
         topics_dict["NumOfComments"].append(c.num_comments)
-        topics_dict["created"].append(commentTimeStamp)
-        topics_dict["subreddit_name_prefixed"].append(i.subreddit_name_prefixed)
-        topics_dict["permalink"].append(i.permalink)
-        topics_dict["body"].append(i.body)
-        topics_dict["sentimentPos"].append(polarityScore['pos'])
-        topics_dict["sentimentNeg"].append(polarityScore['neg'])
-        topics_dict["sentimentNeu"].append(polarityScore['neu'])
-        topics_dict["sentimentComp"].append(polarityScore['compound'])
+        topics_dict["created"].append(submissionTimeStamp)
+        topics_dict["subreddit_name_prefixed"].append(c.subreddit_name_prefixed)
+        topics_dict["permalink"].append(c.permalink)
+        topics_dict["body"].append(c.selftext)
+        topics_dict["sentimentPos"].append("")
+        topics_dict["sentimentNeg"].append("")
+        topics_dict["sentimentNeu"].append("")
+        topics_dict["sentimentComp"].append("")
+
+        #Creates a "sub" object for the current comment to scrape all replies
+        sub = reddit_read_only.submission(id=c.id)
+        sub.comments.replace_more(limit=redditCommentSize)
+
+        #For loop to iterate through replies to the previous comment
+        for i in sub.comments.list():
+          #Calculate Sentiment
+          sia = SIA()
+          stopWords = set(stopwords.words('english'))
+          wordTokenize = word_tokenize(i.body)
+          filteredSentence = [w for w in wordTokenize if not w.lower() in stopWords]
+          polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
+
+          #Convert Comment Time to DateTime
+          commentTimeStamp=datetime.datetime.utcfromtimestamp(i.created).strftime('%Y-%m-%d %H:%M:%S')
+
+          #Append to Dictionary
+          topics_dict["title"].append(c.title)
+          topics_dict["author"].append(i.author)
+          topics_dict["author_fullname"].append("")
+          topics_dict["score"].append(i.score)
+          topics_dict["id"].append(i.id)
+          topics_dict["url"].append(c.url)
+          topics_dict["NumOfComments"].append(c.num_comments)
+          topics_dict["created"].append(commentTimeStamp)
+          topics_dict["subreddit_name_prefixed"].append(i.subreddit_name_prefixed)
+          topics_dict["permalink"].append(i.permalink)
+          topics_dict["body"].append(i.body)
+          topics_dict["sentimentPos"].append(polarityScore['pos'])
+          topics_dict["sentimentNeg"].append(polarityScore['neg'])
+          topics_dict["sentimentNeu"].append(polarityScore['neu'])
+          topics_dict["sentimentComp"].append(polarityScore['compound'])
+    except Exception as e:
+      logging.error('Reddit Custom Query Error: %s', e)
+      msg4 = 'Search Error - Check your subreddit'
+      showerror(
+        title='Error',
+        message=msg4
+        )
     #Creates a dataframe and pulls in the dictionary for processing
     df = pd.DataFrame(topics_dict)
     #Opens the output file, appends the data, closes the file
@@ -505,10 +530,12 @@ def redditCustomCMD():
       f.write(df.to_csv())
 
     logging.info('Custom search query has started for %s on %s subreddit, requesting %s submissions and  %s comments', searchTerm, subName, redditResultSize, redditCommentSize)
-    #clears the custom config and repacks the main Reddit app
-    redditCustomConfig.pack_forget()
-    redditApp.pack()
-
+    msg4 = 'Search Complete - Enter a new search\nor press back to return to the query selection'
+    showinfo(
+      title='All Done',
+      message=msg4
+    )
+    
 #Clears the main Reddit app and packs the main app
 def mainAppCMD():
   logging.info('user: %s has returned to the tool selection', user.get())
