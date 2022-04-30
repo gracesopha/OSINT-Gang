@@ -6,6 +6,7 @@ import datetime
 import csv
 # For saving access tokens and for file management when creating and adding to the dataset
 import os
+from re import subn
 import tkinter as tk
 import hashlib
 import logging
@@ -44,7 +45,6 @@ with open(REDDIT_CONFIG_FILE, 'r', encoding='utf-8') as config_file:
   redditId = config['reddit']['id']
   redditSecret = config['reddit']['secret']
   tokenvalue = config['twitter']['key']
-  #usrername = config
 
 #Sets up the Reddit API connection
 reddit_read_only = praw.Reddit(client_id=redditId,
@@ -100,6 +100,7 @@ user = tk.StringVar()
 password = tk.StringVar()
 searchInput = tk.StringVar()
 customResultSize = tk.IntVar()
+customCommentSize = tk.IntVar()
 customSubs = tk.StringVar()
 newUsername = tk.StringVar()
 newPassword = tk.StringVar()
@@ -284,10 +285,6 @@ def redditDefaultCMD():
         stopWords = set(stopwords.words('english'))
         wordTokenize = word_tokenize(i.body)
         filteredSentence = [w for w in wordTokenize if not w.lower() in stopWords]
-        filteredSentence = []
-        for w in wordTokenize:
-          if w not in stopWords:
-            filteredSentence.append(w)
         polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
 
         #Convert Comment Time to DateTime
@@ -437,15 +434,17 @@ def redditCustomCMD():
     subName = reddit_read_only.subreddit(customSubs.get())
     strResultSize = customResultSize.get()
     redditResultSize=int(strResultSize)
+    strCommentSize = customCommentSize.get()
+    redditCommentSize=int(strCommentSize)
     #Warns the user
-    msg = 'This will take a while.\nYou will receive a CSV with results when it is done.'
+    msg = f'Searching {subName} for {searchTerm}\nReturning {redditResultSize} submissions and {redditCommentSize} comment threads\nThis will take a while.\nYou will receive a CSV with results when it is done.'
     showinfo(
       title='Information',
       message=msg
     )
-    logging.info('user: %s has run a custom query for %s on %s subreddit, requesting %s results', user.get(), searchTerm, subName, redditResultSize)
+    logging.info('user: %s has run a custom query for %s on %s subreddit, requesting %s submissions and  %s comments', user.get(), searchTerm, subName, redditResultSize, redditCommentSize)
     #For loop to iterate through search results based on user input
-    logging.info('Custom search query has started for %s on %s subreddit, requesting %s results', searchTerm, subName, redditResultSize)
+    logging.info('Custom search query has started for %s on %s subreddit, requesting %s submissions and  %s comments', searchTerm, subName, redditResultSize, redditCommentSize)
     for c in subName.search(searchTerm, limit=redditResultSize):
       #Convert Submission Time to DateTime
       submissionTimeStamp=datetime.datetime.utcfromtimestamp(c.created).strftime('%Y-%m-%d %H:%M:%S')
@@ -469,7 +468,7 @@ def redditCustomCMD():
 
       #Creates a "sub" object for the current comment to scrape all replies
       sub = reddit_read_only.submission(id=c.id)
-      sub.comments.replace_more(limit=None)
+      sub.comments.replace_more(limit=redditCommentSize)
 
       #For loop to iterate through replies to the previous comment
       for i in sub.comments.list():
@@ -478,10 +477,6 @@ def redditCustomCMD():
         stopWords = set(stopwords.words('english'))
         wordTokenize = word_tokenize(i.body)
         filteredSentence = [w for w in wordTokenize if not w.lower() in stopWords]
-        filteredSentence = []
-        for w in wordTokenize:
-          if w not in stopWords:
-            filteredSentence.append(w)
         polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
 
         #Convert Comment Time to DateTime
@@ -509,7 +504,7 @@ def redditCustomCMD():
     with open("reddit.csv", "a", encoding='utf-8') as f:
       f.write(df.to_csv())
 
-    logging.info('Custom search query has ended for %s on %s subreddit, requesting %s results', searchTerm, subName, redditResultSize)
+    logging.info('Custom search query has started for %s on %s subreddit, requesting %s submissions and  %s comments', searchTerm, subName, redditResultSize, redditCommentSize)
     #clears the custom config and repacks the main Reddit app
     redditCustomConfig.pack_forget()
     redditApp.pack()
@@ -571,10 +566,6 @@ def append_to_csv(json_response, fileName):
       stopWords = set(stopwords.words('english'))
       wordTokenize = word_tokenize(text)
       filteredSentence = [w for w in wordTokenize if not w.lower() in stopWords]
-      filteredSentence = []
-      for w in wordTokenize:
-        if w not in stopWords:
-          filteredSentence.append(w)
       polarityScore= sia.polarity_scores( ' '.join(filteredSentence))
       posScore = polarityScore['pos']
       negScore = polarityScore['neg']
@@ -660,6 +651,12 @@ redditCustomLabel2 = ttk.Label(redditCustomConfig, text="Please Enter the number
 redditCustomLabel2.pack(fill='x', expand=True, pady=10)
 redditCustomEntry2 = ttk.Entry(redditCustomConfig, textvariable=customResultSize)
 redditCustomEntry2.pack(fill='x', expand=True, pady=10)
+
+#Comment Tread count box and label
+redditCustomLabel3 = ttk.Label(redditCustomConfig, text="Please Enter the number of comment threads per subreddit to return")
+redditCustomLabel3.pack(fill='x', expand=True, pady=10)
+redditCustomEntry3 = ttk.Entry(redditCustomConfig, textvariable=customCommentSize)
+redditCustomEntry3.pack(fill='x', expand=True, pady=10)
 
 #Go button and label
 redditCustomGo = ttk.Button(redditCustomConfig, text="Let's Do It", command=redditCustomCMD)

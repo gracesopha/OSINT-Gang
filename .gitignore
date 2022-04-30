@@ -11,3 +11,5 @@ reddit.csv
 twitter.csv
 .pylintrc
 pylint.txt
+.scannerwork/.sonar_lock
+.scannerwork/report-task.txt
