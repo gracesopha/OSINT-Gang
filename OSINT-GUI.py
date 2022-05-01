@@ -10,6 +10,7 @@ from re import subn
 import tkinter as tk
 import hashlib
 import logging
+from threading import Thread
 from tkinter import ttk
 from tkinter.messagebox import showinfo
 from tkinter.messagebox import showerror
@@ -236,13 +237,13 @@ def redditDefaultCMD():
   else:
     try:
       #Clears the Reddit main app
-      redditApp.pack_forget()
+      #redditApp.pack_forget()
       #Packs the Reddit Default screen
-      redditDefaultApp.pack(padx=160, pady=30, fill='x', expand=True)
-      redditDefaultLabel1 = ttk.Label(redditDefaultApp, text="Running now")
-      redditDefaultLabel1.pack()
-      redditDefaultLabel2 = ttk.Label(redditDefaultApp, text="This will take a while. You will receive a CSV with results when it is done.")
-      redditDefaultLabel2.pack()
+      #redditDefaultApp.pack(padx=160, pady=30, fill='x', expand=True)
+      #redditDefaultLabel1 = ttk.Label(redditDefaultApp, text="Running now")
+      #redditDefaultLabel1.pack()
+      #redditDefaultLabel2 = ttk.Label(redditDefaultApp, text="This will take a while. You will receive a CSV with results when it is done.")
+      #redditDefaultLabel2.pack()
       searchTerm = searchInput.get()
       #Pops up warning
       logging.info('user: %s ran a default reddit search for: %s', user.get(), searchTerm)
@@ -315,6 +316,11 @@ def redditDefaultCMD():
       with open("reddit.csv", "a", encoding='utf-8') as f:
         f.write(df.to_csv())
       logging.info('Ending default query for: %s', searchTerm)
+      msg = 'Reddit Default Query Completed'
+      showinfo(
+        title='Information',
+        message=msg
+      )
     except Exception as e:
       logging.error('Error: %s', e)
       msg4 = 'Search Error - Check your Reddit query'
@@ -408,7 +414,7 @@ def twitterCMD():
             next_token = None
 
       logging.info('user: %s - query for %s on Twitter returned %s tweets', user.get(), keyword, total_tweets)
-      msg = f'Total # of Tweets added:  {total_tweets}'
+      msg = f'Twitter Scrape Completed\nTotal # of Tweets added:  {total_tweets}'
       showinfo(
         title='Information',
         message=msg
@@ -530,7 +536,7 @@ def redditCustomCMD():
       f.write(df.to_csv())
 
     logging.info('Custom search query has started for %s on %s subreddit, requesting %s submissions and  %s comments', searchTerm, subName, redditResultSize, redditCommentSize)
-    msg4 = 'Search Complete - Enter a new search\nor press back to return to the query selection'
+    msg4 = 'Custom Reddit Query Completed.\nPlease check for compiled CSV in program directory'
     showinfo(
       title='All Done',
       message=msg4
@@ -604,6 +610,18 @@ def append_to_csv(json_response, fileName):
       # Append the result to the CSV file
       csvWriter.writerow(res)
       counter += 1
+
+def redditCustomThreaded():
+    t1=Thread(target=redditCustomCMD)
+    t1.start()
+
+def redditDefaultThreaded():
+    t1=Thread(target=redditDefaultCMD)
+    t1.start()
+
+def twitterThreaded():
+    t1=Thread(target=twitterCMD)
+    t1.start()
 
 # Creates and packs the sign in frame
 signIn = ttk.Frame(root)
@@ -686,7 +704,7 @@ redditCustomEntry3 = ttk.Entry(redditCustomConfig, textvariable=customCommentSiz
 redditCustomEntry3.pack(fill='x', expand=True, pady=10)
 
 #Go button and label
-redditCustomGo = ttk.Button(redditCustomConfig, text="Let's Do It", command=redditCustomCMD)
+redditCustomGo = ttk.Button(redditCustomConfig, text="Let's Do It", command= redditCustomThreaded)
 redditCustomGo.pack(fill='x', expand=True, pady=10)
 redditButton = ttk.Button(redditCustomConfig, text="Back",command=redditButtonCMD)
 redditButton.pack(fill='x', expand=True, pady=10)
@@ -703,7 +721,7 @@ twitterSearchEntry.pack(fill='x', expand=True, pady=10)
 twitterSearchEntry1 = ttk.Entry(twitterApp, textvariable=customResultSize)
 twitterSearchEntry1.pack(fill='x', expand=True, pady=10)
 twitterSearchEntry.focus()
-twitterScrapeButton = ttk.Button(twitterApp, text="Scrape", command=twitterCMD)
+twitterScrapeButton = ttk.Button(twitterApp, text="Scrape", command=twitterThreaded)
 twitterScrapeButton.pack(fill='x', expand=True, pady=10)
 twitterBackButton = ttk.Button(twitterApp, text="Back",command=mainAppCMD)
 twitterBackButton.pack(fill='x', expand=True, pady=10)
@@ -716,7 +734,7 @@ redditSearchEntry.pack(fill='x', expand=True, pady=10)
 redditSearchEntry.focus()
 
 #Default button and label
-redditDefaultButton = ttk.Button(redditApp, text="Default", command=redditDefaultCMD)
+redditDefaultButton = ttk.Button(redditApp, text="Default", command=redditDefaultThreaded)
 redditDefaultButton.pack(fill='x', expand=True, pady=10)
 
 #Custom button and label
