@@ -236,14 +236,6 @@ def redditDefaultCMD():
     logging.warning('user: %s  has attempted a blank default query', user.get())
   else:
     try:
-      #Clears the Reddit main app
-      #redditApp.pack_forget()
-      #Packs the Reddit Default screen
-      #redditDefaultApp.pack(padx=160, pady=30, fill='x', expand=True)
-      #redditDefaultLabel1 = ttk.Label(redditDefaultApp, text="Running now")
-      #redditDefaultLabel1.pack()
-      #redditDefaultLabel2 = ttk.Label(redditDefaultApp, text="This will take a while. You will receive a CSV with results when it is done.")
-      #redditDefaultLabel2.pack()
       searchTerm = searchInput.get()
       #Pops up warning
       logging.info('user: %s ran a default reddit search for: %s', user.get(), searchTerm)
@@ -328,9 +320,7 @@ def redditDefaultCMD():
         title='Error',
         message=msg4
       )  
-    #Clears the Reddit default query, repacks the main Reddit app
-    redditDefaultApp.pack_forget()
-    redditApp.pack()
+
 
 def create_url(keyword, max_results = 10):
   search_url = "https://api.twitter.com/2/tweets/search/recent" #Change to the endpoint you want to collect data from
