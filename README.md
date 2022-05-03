@@ -6,7 +6,7 @@ open source intelligence project
 
 ## Prerequisites
 
-Requires Python 3
+Requires Python 3.9
 
 ---
 
