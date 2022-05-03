@@ -319,13 +319,13 @@ def redditDefaultCMD():
       showerror(
         title='Error',
         message=msg4
-      )  
+      )
 
-
+#This sets which access URL we will use from the twitter API
 def create_url(keyword, max_results = 10):
-  search_url = "https://api.twitter.com/2/tweets/search/recent" #Change to the endpoint you want to collect data from
+  search_url = "https://api.twitter.com/2/tweets/search/recent" #Default is set to "Recent" which automatically scrapes within tweets from the last 7 days
 
-  #change params based on the endpoint you are using
+  #Parameters that are used by the access point we selected
   query_params = {'query': keyword,
                   'max_results': max_results,
                   'expansions': 'author_id,in_reply_to_user_id,geo.place_id',
@@ -359,7 +359,7 @@ def twitterCMD():
       # Create file
       with open("twitter.csv", "a", newline="", encoding='utf-8') as csvFile:
         csvWriter = csv.writer(csvFile)
-        #Create headers for the data you want to save, in this example, we only want save these columns in our dataset
+        #This sets the column headers for twitter.csv | Adjust depending on requirements
         csvWriter.writerow(['author id', 'created_at', 'geo', 'id','lang', 'like_count', 'quote_count', 'reply_count','retweet_count','source','tweet','Positive_Score','Negative_Score','Neutral_Score','Compound_Score'])
 
       msg = f'Scraping {twitterResultSize} tweets\nThis might take a while, please be patient.'
@@ -531,7 +531,7 @@ def redditCustomCMD():
       title='All Done',
       message=msg4
     )
-    
+
 #Clears the main Reddit app and packs the main app
 def mainAppCMD():
   logging.info('user: %s has returned to the tool selection', user.get())
