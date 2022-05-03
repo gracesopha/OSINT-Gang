@@ -42,3 +42,5 @@ Expects username and password database to be in a CredFile.txt file in this form
 The basis for the twitter portion was made using this [tutorial](https://towardsdatascience.com/an-extensive-guide-to-collecting-tweets-from-twitter-api-v2-for-academic-research-using-python-3-518fcb71df2a).
 
 A list of all the available access points for the Twitter scraper can be found [here](https://developer.twitter.com/en/docs/api-reference-index).
+
+Documentation and samples for sentiment analysis from [here](nltk.org/howto/sentiment.html)
