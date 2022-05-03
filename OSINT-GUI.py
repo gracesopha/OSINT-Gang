@@ -352,7 +352,7 @@ def twitterCMD():
       keyword = searchInput.get()
       max_results = 100
       strResultSize = customResultSize.get()
-      twitterResultSize=int(strResultSize)
+      twitterResultSize=int(strResultSize)*100
       #Total number of tweets we collected from the loop
       total_tweets = 0
 
@@ -704,7 +704,7 @@ redditApp = ttk.Frame(root)
 
 #Twitter Landing Frame
 twitterApp = ttk.Frame(root)
-twitterLabel1 = ttk.Label(twitterApp, text="Please enter a search term and number of tweets to retreive (Multiples of 100).")
+twitterLabel1 = ttk.Label(twitterApp, text="Please enter a search term and number of tweets to retreive\n(Multiples of 100).")
 twitterLabel1.pack(fill='x', expand=True, pady=10)
 twitterSearchEntry = ttk.Entry(twitterApp, textvariable=searchInput)
 twitterSearchEntry.pack(fill='x', expand=True, pady=10)
