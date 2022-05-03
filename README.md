@@ -37,3 +37,8 @@ Expects username and password database to be in a CredFile.txt file in this form
 
     username,*SHA512 Password Hash*
 ---
+## Works referenced
+
+The basis for the twitter portion was made using this [tutorial](https://towardsdatascience.com/an-extensive-guide-to-collecting-tweets-from-twitter-api-v2-for-academic-research-using-python-3-518fcb71df2a).
+
+A list of all the available access points for the Twitter scraper can be found [here](https://developer.twitter.com/en/docs/api-reference-index).

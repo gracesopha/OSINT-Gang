@@ -16,5 +16,4 @@ This script will output 100 tweets that were found using the given keyword. It w
 
 ## Credits
 
-This was made by following this [tutorial](https://lucacorbucci.medium.com/how-to-scrape-tweets-using-tweepy-47f4be2b1d).
-
+This was made by following this [tutorial](https://towardsdatascience.com/an-extensive-guide-to-collecting-tweets-from-twitter-api-v2-for-academic-research-using-python-3-518fcb71df2a).
